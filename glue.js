@@ -8,7 +8,7 @@ const CARGO = ["학교 급식", "핵폭탄", "괴물 알", "축제 음료", "도
 const CHANGE = { 1: "머리 염색", 2: "안경 착용", 3: "흉터 치료" };
 const LABELS = ["운전석", "화물칸 1", "판정 레버", "운전기사", "AI 감식대", "포획 대상", "표본 관찰대", "비교 시험대", "우주항 사무소", "관제탑"];
 const CUES = ["날짜", "얼굴", "화물 모양", "화물 색", "무늬 색", "비율", "허가증", "트럭 번호(통째로 외우기)"];
-const NOT_YET = "알아 둘 것: 진행 상황은 저장되지 않으니 창을 닫지 말고 이어서 하세요. 소리는 간단한 효과음만 있습니다(왼쪽 아래에서 끌 수 있어요).";
+const NOT_YET = "알아 둘 것: 진행 상황(주기·크레딧·우주항·AI 예시)은 이 브라우저에만 저장됩니다. 하던 근무는 저장되지 않고 그 주기의 첫 트럭부터 다시 합니다. 소리는 간단한 효과음만 있습니다(왼쪽 아래에서 끌 수 있어요).";
 // Ranger look: part names and choice names, in the order the core numbers them.
 const LOOK = [
   ["체형", ["기본", "큰 머리", "긴 다리"]],
@@ -492,6 +492,7 @@ document.addEventListener("click", (e) => {
   else if (b.dataset.do === "permitpng") savePng(permitSheet, "orbit-gate-permit.png");
   else if (b.dataset.do === "permitpdf") savePdf(permitSheet);
   else if (b.dataset.do === "start") start();
+  else if (b.dataset.do === "fresh") { try { localStorage.removeItem("og-save"); } catch {} location.reload(); }
   else if (b.dataset.do === "mute") { muted = !muted; b.textContent = muted ? "소리 켜기" : "소리 끄기"; }
   else if (b.dataset.do === "look") { $("lookbox").hidden = false; $("lookslot2").append($("look")); }
   else if (b.dataset.do === "lookclose") { $("lookbox").hidden = true; $("lookslot").append($("look")); }
@@ -577,6 +578,35 @@ $("lookopts").innerHTML = LOOK.map(([name], i) => `<div><span>${name}</span><but
   try { saved = (localStorage.getItem("og-look") || "").split(",").map(Number); } catch {}
   LOOK.forEach((_, i) => setLook(i, Number.isInteger(saved[i]) ? saved[i] : 0, false));
 }
+// ---- progress: one line of numbers kept in this browser only (no name in it, nothing sent) ----
+// Not used for practice links, measurement runs or scripted checks (?skip) unless ?keep is given.
+const keeps = !qs.has("cycle") && !qs.has("bench") && (!qs.has("skip") || qs.has("keep"));
+const ioText = (len) => new Uint8Array(mem(), ex.og_io(len), len);
+function saveText() {
+  const len = ex.og_save();
+  return len ? new TextDecoder().decode(ioText(len).slice()) : "";
+}
+function loadText(text) {
+  const bytes = enc.encode(text);
+  ioText(bytes.length).set(bytes);
+  return ex.og_load() === 1;
+}
+let saveKey = "";
+function keep(st) {
+  if (!keeps || !started) return;
+  // whenever a truck is finished, something is bought, or the lists or models change
+  const key = [16, 24, 34, 36, 46, 72, 73, 74, 75, 83, 85, 86, 87].map((i) => st[i]).join(",");
+  if (key === saveKey) return;
+  saveKey = key;
+  const text = saveText();
+  if (text) try { localStorage.setItem("og-save", text); } catch {}
+}
+if (keeps) {
+  let text = "";
+  try { text = localStorage.getItem("og-save") || ""; } catch {}
+  if (text && loadText(text)) $("resume").hidden = false;
+}
+window.__og_save = saveText;
 // practice link: ?cycle=2&truck=4 starts at that truck (no permit comes from a practice run)
 if (qs.has("cycle")) ex.og_jump(Number(qs.get("cycle")) || 1, Math.max(0, (Number(qs.get("truck")) || 1) - 1));
 if (qs.has("bench") || qs.has("skip")) start();
@@ -622,7 +652,7 @@ function tick(now) {
   const cpu = performance.now() - c0;
   frame++;
   if (benchFrames && !benchDone) {
-    if (frame === 60) { ex.og_bench(); benchT0 = now; }
+    if (frame === 60) { qs.get("bench") === "2" ? ex.og_bench_full() : ex.og_bench(); benchT0 = now; } // ?bench=2: the heaviest scene
     else if (frame > 60) {
       ex.og_sample(dt * 1000, cpu);
       if (dt * 1000 > stall.ms) Object.assign(stall, { frame: frame - 60, ms: Math.round(dt * 1000), at_ms: Math.round(now), work_ms: Math.round(cpu * 10) / 10 });
@@ -645,7 +675,7 @@ function tick(now) {
       $("bench").textContent = JSON.stringify(window.__og.bench, null, 1);
     }
   }
-  if (started) sounds(window.__og.state());
+  if (started) { sounds(window.__og.state()); keep(window.__og.state()); }
   // ui() returns false when nothing it shows has changed
   if (ui(window.__og.state()) !== false && benchFrames && !benchDone && frame > 60 && stall.ui_frames.length < 12) stall.ui_frames.push(frame - 60);
   window.__og.ready = true;

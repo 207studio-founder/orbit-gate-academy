@@ -26,7 +26,7 @@
       #panel ul { margin: 4px 0; padding-left: 20px; }
       #toast { left: 50%; top: 60px; transform: translateX(-50%); font-size: 18px; text-align: center; }
       #toast.ok { border-color: #5fe08a; } #toast.bad { border-color: #ff4d5e; }
-      #event { left: 50%; top: 150px; transform: translateX(-50%); font-size: 17px; text-align: center; }
+      #event { left: 50%; bottom: 124px; transform: translateX(-50%); font-size: 17px; text-align: center; z-index: 2; }
       #event.ok { border-color: #5fe08a; } #event.bad { border-color: #ff4d5e; } #event.warn { border-color: #ffc93c; }
       .bribe { color: #ffb3c7; margin: 6px 0; }
       #bench { right: 12px; top: 12px; font: 12px/1.4 ui-monospace, monospace; white-space: pre; border-color: #5b6399; }
@@ -95,6 +95,7 @@
           </div>
         </div>
         <button data-do="start">E 또는 Enter: 근무 시작</button> <a href="teacher.html" style="color:#7df9ff;font-size:13px;margin-left:12px">교사용 수업 슬라이드</a>
+        <div id="resume" hidden style="margin-top:8px;color:#5fe08a">저장된 진행 상황을 불러왔습니다. <button data-do="fresh" style="padding:0 8px;font-size:12px">처음부터 새로 하기</button></div>
         <div id="notyet"></div>
       </div>
     </div>
