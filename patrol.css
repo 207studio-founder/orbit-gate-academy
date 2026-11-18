@@ -576,3 +576,420 @@ body[data-teacher] #slides {
 .fieldShell kbd {
   font-family: ui-monospace, monospace;
 }
+
+.waypoint,
+.mapPin {
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition: none;
+}
+orbit-specimen {
+  display: block;
+  min-width: 0;
+  position: relative;
+}
+orbit-specimen canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  max-width: 100%;
+  margin-inline: auto;
+}
+orbit-specimen[interactive] canvas {
+  cursor: grab;
+  touch-action: none;
+  max-width: 260px;
+}
+orbit-specimen[interactive] canvas:active {
+  cursor: grabbing;
+}
+.spinTools {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 5px;
+}
+.spinTools button {
+  font: 700 16px system-ui;
+  line-height: 1;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #8ca4a8;
+  border-radius: 6px;
+  background: #f4eedc;
+  color: #243b45;
+}
+.specimenRack figure,
+.sampleWell,
+.dressMirror {
+  background: radial-gradient(
+    ellipse at 50% 78%,
+    #c9bd9d 0,
+    #ebdfc1 30%,
+    #f5ecd5 80%
+  );
+  border-radius: 10px;
+}
+.specimenRack figure {
+  padding: 3px 6px 8px;
+  flex: 1;
+  min-width: 0;
+}
+.specimenRack figcaption {
+  margin: 0;
+  color: #344450;
+}
+.scanBench,
+.dressRoom {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 15px;
+  align-items: center;
+}
+.sampleWell {
+  text-align: center;
+  padding: 5px 6px;
+  color: #385466;
+}
+.sampleWell small {
+  display: block;
+  margin: 4px 0 7px;
+}
+.classKeys,
+.atlasForms,
+.dressOptions fieldset {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.classKeys button,
+.dressOptions button,
+.atlasForms button {
+  padding: 6px 9px;
+  min-height: 32px;
+}
+.sampleFeedback {
+  display: block;
+  min-height: 32px;
+  margin: 9px 0;
+}
+.experiment {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #96a3a1;
+}
+.experiment h3,
+.scanBench h3 {
+  margin: 4px 0 8px;
+}
+.scanResult,
+.documentSheet,
+.benchEntry {
+  padding: 11px;
+  background: #dae8dc;
+  color: #203c3b;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.scanErrors,
+.atlasShelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+.scanErrors figure,
+.atlasShelf figure {
+  margin: 0;
+  text-align: center;
+  background: #fff6df;
+  border: 1px solid #c3baa4;
+  border-radius: 8px;
+  color: #283b47;
+}
+.atlasShelf figure small {
+  display: block;
+  font-size: 11px;
+}
+.atlasShelf orbit-specimen canvas,
+.scanErrors canvas {
+  height: 92px;
+  width: 92px;
+}
+.atlasForms {
+  margin-bottom: 9px;
+}
+.dressOptions fieldset {
+  border: 0;
+  padding: 0;
+  margin: 5px 0 10px;
+}
+.dressOptions legend {
+  font-weight: 800;
+  margin: 0 0 5px;
+}
+.dressMirror {
+  background: radial-gradient(
+    ellipse at 50% 84%,
+    #a3a3be,
+    #d6cbdc 30%,
+    #ebe2eb 65%
+  );
+}
+.benchEntry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.lessonCards orbit-specimen {
+  width: clamp(72px, 14vw, 185px);
+}
+.documentSheet .markedFace {
+  width: 92px;
+}
+.documentSheet .markedFace img {
+  width: 90px;
+}
+.portWorld canvas:active {
+  cursor: grabbing;
+}
+.portWorld.aiming canvas {
+  cursor: crosshair;
+}
+.fieldHead > div:last-child {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.caseRegistry {
+  margin-block: 8px;
+}
+.caseRegistry li {
+  font-size: 13px;
+}
+.fieldActions,
+.taskBox {
+  max-width: 90%;
+}
+@media (max-width: 550px) {
+  .scanBench,
+  .dressRoom {
+    grid-template-columns: 1fr;
+  }
+  .sampleWell canvas,
+  .dressMirror canvas {
+    max-width: 146px !important;
+  }
+  .atlasShelf orbit-specimen canvas {
+    width: 65px;
+    height: 65px;
+  }
+  .specimenRack .spinTools button {
+    width: 22px;
+  }
+  .fieldHead button {
+    padding: 4px;
+  }
+  .classKeys button,
+  .dressOptions button {
+    font-size: 12px;
+  }
+}
+
+.onDuty .headin nav > :not(.audio) {
+  display: none;
+}
+.onDuty .wordmark {
+  pointer-events: none;
+}
+dialog.instrumentPanel {
+  width: min(980px, 95vw);
+  max-width: 95vw;
+}
+dialog.instrumentPanel .console,
+dialog .pagePaper {
+  width: auto;
+  margin: 0;
+  background: transparent;
+}
+dialog.instrumentPanel .labMain {
+  color: #263347;
+}
+.receiptDesk {
+  max-width: 640px;
+  margin: 10vh auto;
+  padding: 32px;
+  background: #f2ead6;
+  color: #223746;
+  border-radius: 12px;
+}
+.receiptDesk form,
+.teacherReceipt {
+  text-align: center;
+}
+.receiptDesk input {
+  max-width: 150px;
+  width: 9em;
+  padding: 9px;
+}
+.teacherReceipt a {
+  color: #d4e8da;
+}
+.briefGroup {
+  background: #dcebdc;
+  border-left: 4px solid #49a397;
+  color: #24383a;
+  padding: 10px 13px;
+  border-radius: 6px;
+}
+.briefGroup h3,
+.briefGroup p {
+  margin: 5px 0;
+}
+.yardMap {
+  height: 250px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #658495;
+  background: repeating-linear-gradient(
+    90deg,
+    #24394a,
+    #24394a 24px,
+    #314954 25px
+  );
+  border-radius: 10px;
+}
+.yardMap span,
+.yardMap i {
+  position: absolute;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  background: #193141;
+  color: #d6f7eb;
+  border: 1px solid #73afaa;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+.yardMap i {
+  background: #764623;
+  color: #fff0b0;
+}
+.mapRoad {
+  position: absolute;
+  top: 13%;
+  width: 100%;
+  height: 25%;
+  background: #566578;
+  color: #e7d9b1;
+  padding: 4px 8px;
+}
+.fieldHead > small {
+  color: #c2d2d9;
+}
+.fieldHead > div:first-child {
+  display: grid;
+}
+.specimenRack {
+  align-items: start;
+}
+.instrumentPanel .laneScore {
+  color: #142539;
+}
+.onDuty .fieldFoot button {
+  font-size: 12px;
+}
+.teacherReceipt {
+  margin: 12px auto 20px;
+}
+.lessonCards orbit-specimen {
+  margin: auto;
+}
+
+.hero,
+.lessonHeroArt {
+  background-image: url("assets/pixel-port.webp");
+  image-rendering: pixelated;
+}
+.portWorld#world {
+  background-image: url("assets/pixel-sky.webp");
+  image-rendering: pixelated;
+}
+.portWorld > canvas,
+orbit-specimen canvas {
+  image-rendering: pixelated;
+}
+.hero:before {
+  background: linear-gradient(90deg, #222140bc, #3530494a 43%, transparent 66%);
+}
+.fieldShell,
+.lessonSlide {
+  border-radius: 8px;
+}
+.waypoint,
+.mapPin {
+  border-radius: 3px;
+}
+.fieldHead,
+.fieldFoot {
+  color: #ece7f5;
+}
+.sampleWell canvas:focus,
+.dressMirror canvas:focus {
+  outline: 2px solid #cc9560;
+}
+.markedFace orbit-specimen {
+  display: block;
+  min-width: 72px;
+  min-height: 72px;
+  aspect-ratio: 1;
+}
+.markedFace orbit-specimen canvas {
+  background: linear-gradient(#c8ced9, #f2e8d3);
+}
+.onDuty .portWorld.aiming canvas {
+  cursor: crosshair;
+}
+.mapPin.cargoPin {
+  font-size: 10px;
+  padding: 1px 3px;
+  margin-top: -9px;
+  background: #15372ee0;
+  border-color: #8fc5a3;
+  pointer-events: none;
+}
+.benchEntry {
+  gap: 12px;
+}
+.fieldMapHelp {
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .hero {
+    background-position: 67% 50%;
+  }
+  .hero:before {
+    background: linear-gradient(90deg, #172035dc, transparent 87%);
+  }
+}
+
+.rosterFace {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  vertical-align: middle;
+}
+.rosterFace canvas {
+  width: 100%;
+  height: 100%;
+}
+.traveller .rosterFace {
+  width: 100%;
+  height: 100%;
+}
+.introCargo orbit-specimen {
+  width: 40%;
+}

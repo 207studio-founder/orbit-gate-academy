@@ -1,4 +1,10 @@
 "use strict";
+function seizedTotal() {
+  return Object.values(s.seizures || {}).reduce(
+    (sum, mask) => sum + (mask & 1) + ((mask >> 1) & 1),
+    0,
+  );
+}
 function rankData() {
   const b = s.station || [20, 3, 1, 0, 0, 0, 0, 0, 100, 0],
     win = s.wins.length,
@@ -26,8 +32,9 @@ function rankData() {
 function rangerReport() {
   SpacePort.resetInput();
   const { b, rank, r, lane, correct } = rankData();
+  const t = Traffic.state();
   modal(
-    `${chip("제7 우주항 · 개인 근무 기록")}${title("스페이스 레인저 등급표")}<div class="rankBand"><span>✦</span><div><small>현재 등급</small><b>${rank}</b></div></div><p>직접 검사 ${s.rows.length}건 중 ${correct}건 정확　·　학습 모델 ${s.version}개<br>${r ? `최근 자동 방어 ${lane.correct}/${r.total} · 잘못 통과 ${lane.miss} · 잘못 보류 ${lane.delay}` : "자동 방어 평가 전"}<br>담당 레일 ${b[2]}개　·　크레딧 ${b[0]}　·　그물 포획 ${b[9]}회　·　신뢰도 ${b[8]}/100</p><details><summary>등급 기준</summary><p>수습 → 모델을 학습하면 브론즈 → 항로 1·2·3개를 열면 실버·골드·마스터 → 콘도 회원권을 사면 콘도 명예 레인저</p></details><label class="reportLabel">제출자 이름 또는 닉네임 <input id="rangerName" maxlength="18" placeholder="예: 6학년 3번 별이"></label><label class="reportLabel">오늘 내 AI에 더 가르치고 싶은 사례 <input id="rangerThought" maxlength="60" placeholder="예: 오늘까지 쓸 수 있는 통행증"></label><div class="actions">${btn("exportPNG", "PNG 저장", "primary")}${btn("exportPDF", "PDF 저장", "secondary")}${b[1] === 0 ? btn("restoreShift", "새 근무", "secondary") : ""}</div><p class="smallNote">저장한 파일을 선생님이 안내한 과제함에 제출하세요.</p>`,
+    `${chip("제7 우주항 · 개인 근무 기록")}${title(t.issued ? "스페이스 레인저 허가증" : "스페이스 레인저 근무 기록")}<div class="rankBand"><span>✦</span><div><small>현재 등급</small><b>${rank}</b></div></div><p>직접 검사 ${s.rows.length}건 중 ${correct}건 정확　·　학습 모델 ${s.version}개<br>${r ? `최근 자동 방어 ${lane.correct}/${r.total} · 잘못 통과 ${lane.miss} · 잘못 보류 ${lane.delay}` : "자동 방어 평가 전"}<br>담당 레일 ${b[2]}개　·　크레딧 ${b[0]}　·　그물 포획 ${b[9]}회　·　신뢰도 ${b[8]}/100</p><div class="documentSheet">근무 ${t.cycle}주기 · AI 타워 ${t.towers}/16 · 누적 벌금 ${t.fines} CR · 저위험 압수 ${seizedTotal()}개 · 고위험 포획 ${Object.keys(s.detained || {}).length}명 · 괴물 차량 자동 보류 ${s.quarantines?.length || 0}건 · 상위 운영 ${t.successful}/4주기</div><details><summary>등급 기준</summary><p>수습 → 모델을 학습하면 브론즈 → 항로 1·2·3개를 열면 실버·골드·마스터 → 콘도 회원권을 사면 콘도 명예 레인저</p></details><label class="reportLabel">제출자 이름 또는 닉네임 <input id="rangerName" maxlength="18" placeholder="예: 6학년 3번 별이"></label><label class="reportLabel">오늘 내 AI에 더 가르치고 싶은 사례 <input id="rangerThought" maxlength="60" placeholder="예: 오늘까지 쓸 수 있는 통행증"></label><div class="actions">${btn("exportPNG", "PNG 저장", "primary")}${btn("exportPDF", "PDF 저장", "secondary")}${b[1] === 0 ? btn("restoreShift", "새 근무", "secondary") : ""}</div><p class="smallNote">${t.issued ? "허가증 번호 " + t.issued + " · 파일을 선생님 과제함에 제출한 뒤, 선생님이 알려 준 확인 번호를 입력하세요." : "5주기를 마치면 정식 허가증을 발급해요. 지금은 중간 기록을 저장할 수 있어요."}</p>${t.issued && !t.submitted ? `<label class="reportLabel">교사 제출 확인 번호 <input id="receiptCode" maxlength="5" inputmode="numeric" autocomplete="off"></label>${btn("confirmSubmission", "제출 확인 후 무한 모드 입장", "primary")}` : t.submitted ? "<b>교사 제출 확인 · 무한 모드</b>" : ""}`,
   );
 }
 function certificate(name, thought) {
@@ -49,8 +56,24 @@ function certificate(name, thought) {
   rect(0, 0, 1320, 250, "#182840");
   rect(0, 245, 1320, 5, "#e6b458");
   txt("ORBIT GATE     /     제7 우주항", 65, 68, 25, "#ffcf72", 750);
-  txt("스페이스 레인저 근무 증명서", 62, 147, 61, "#fff2d4", 850);
-  txt("초등 실과  ·  인공지능이 만들어지는 과정", 66, 204, 25, "#c6d9db");
+  txt(
+    Traffic.state().issued
+      ? "스페이스 레인저 허가증"
+      : "스페이스 레인저 근무 증명서",
+    62,
+    147,
+    61,
+    "#fff2d4",
+    850,
+  );
+  txt(
+    "초등 실과  ·  인공지능이 만들어지는 과정" +
+      (Traffic.state().issued ? "　|　허가증 " + Traffic.state().issued : ""),
+    66,
+    204,
+    25,
+    "#c6d9db",
+  );
   c.save();
   c.translate(1190, 114);
   c.strokeStyle = "#ffcf72";
@@ -114,6 +137,19 @@ function certificate(name, thought) {
     18,
     "#5c686d",
   );
+  txt(
+    "저위험 물품 압수 " +
+      seizedTotal() +
+      "개　·　고위험 운전자 포획 " +
+      Object.keys(s.detained || {}).length +
+      "명",
+    755,
+    894,
+    18,
+    "#5c686d",
+    650,
+    480,
+  );
   return cv;
 }
 function pdfImage(canvas) {
@@ -175,6 +211,10 @@ async function exportRanger(ext) {
   a.download = `스페이스레인저-${(name || "근무기록").replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_")}.${ext}`;
   document.body.append(a);
   a.click();
+  if (Traffic.state().issued) {
+    Traffic.state().exported = true;
+    save();
+  }
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 45000);
   toast("결과표를 만들었어요. 다운로드 폴더에서 확인하세요.");

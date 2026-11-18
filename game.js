@@ -29,13 +29,18 @@ try {
   if (raw?.v === 1 && Array.isArray(raw.rows) && Array.isArray(raw.models))
     s = { ...s, ...raw };
 } catch {}
+if (s.station?.[7] && !s.traffic) {
+  s.station[7] = 0;
+  s.station[0] += 210;
+  s.legacyMembership = true;
+}
 let screen = "home",
   p = null,
   opened = false,
   feedback = false,
   revisit = false,
   tab = "passport",
-  features = [0, 1, 2, 3],
+  features = [0, 1, 2, 3, 4],
   wire = ["open", "hold"],
   slots = [],
   live = null,
@@ -80,6 +85,8 @@ function btn(act, txt, cls = "", extra = "") {
   return `<button class="${cls}" data-act="${act}" ${extra}>${txt}</button>`;
 }
 function pic(kind, id, alt = "", cls = "") {
+  if (kind === "actor" || kind === "face")
+    return `<orbit-specimen portrait class="rosterFace ${cls}" code="${Number(id)}" aria-label="${alt}"></orbit-specimen>`;
   return `<img class="${cls}" src="assets/${kind}-${id}.webp" alt="${alt}" draggable="false">`;
 }
 function face(id) {
@@ -95,7 +102,7 @@ function date(s) {
   return s.replaceAll("-", ". ");
 }
 function modal(html) {
-  dlg.classList.remove("projector");
+  dlg.classList.remove("projector", "instrumentPanel");
   if (!dlg.open) {
     prevFocus = document.activeElement;
     dlg.showModal();
@@ -138,6 +145,7 @@ function go(name) {
   SpacePort.stop();
   close();
   screen = name;
+  document.body.classList.toggle("onDuty", name === "desk");
   window.scrollTo(0, 0);
   return true;
 }
@@ -148,7 +156,7 @@ function home() {
 }
 function guide() {
   modal(
-    `${chip("제7 우주항 현장 수첩")}${title("근무 조작")}<p><b>WASD / 방향키</b> 이동　<b>Space</b> 점프　<b>Shift</b> 달리기<br><b>마우스 드래그 / Z·C</b> 시점　<b>휠</b> 확대</p><ol class="steps"><li>운전석 가까이에서 E로 서류를 받고 Q로 하차를 요청해요. 날짜와 얼굴 무늬를 비교해요.</li><li>화물칸으로 이동해 E로 천을 걷고 짐을 확인해요. 초록 또는 주황 레버 곁에서 E로 판정해요.</li><li>경보가 울리면 대상을 따라가 F로 그물을 쏘세요. 보호막은 3개예요.</li><li>사례 2개를 모으면 AI를 학습시켜요. 정비소에서 번 돈으로 운송 레일과 방어 장비를 사고 우주 콘도에 도전하세요.</li></ol><div class="actions">${btn("close", "돌아가기", "primary")}<a href="teacher.html" class="button secondary" target="_blank" rel="noopener">수업 슬라이드</a></div>`,
+    `${chip("제7 우주항 현장 수첩")}${title("근무 조작")}<p><b>WASD / 방향키</b> 이동　<b>Space</b> 점프　<b>Shift</b> 달리기<br><b>마우스 드래그 / Z·C</b> 시점　<b>휠</b> 확대</p><ol class="steps"><li>운전석 가까이에서 E(ㄷ)로 서류를 받고 Q(ㅂ)로 하차를 요청해요. 사진이 다르면 메디컬 기록을 대조해요. 날짜와 얼굴 무늬를 비교해요.</li><li>화물칸으로 이동해 E로 열고 짐을 클릭해 들어요. 왼쪽 드래그로 돌리고 다시 클릭해 내려놓아요. 미신고 축제 음료나 씨앗 화분은 들고 노란 압수함을 클릭해요. 미허가 핵폭탄과 괴물 알은 운전자 하차 후 허가증을 확인하고 포획해요. 초록 또는 주황 레버 곁에서 E로 판정해요.</li><li>경보가 울리면 마우스로 가리킨 지점을 클릭해 그물을 쏘세요. F(ㄹ)는 가까운 대상 조준을 도와줘요. 보호막은 3개예요.</li><li>두 사례를 모으면 청록색 감식대에서 AI를 학습시켜요. 손목지도 M(ㅡ)에서 타워 부지와 정비소를 찾아요. 5주기 끝에 허가증을 제출하면 무한 모드가 열려요.</li></ol><div class="actions">${btn("close", "돌아가기", "primary")}<a href="teacher.html" class="button secondary" target="_blank" rel="noopener">수업 슬라이드</a></div>`,
   );
 }
 function teacher() {
@@ -158,9 +166,7 @@ function teacher() {
   dlg.classList.add("projector");
 }
 function hazard() {
-  modal(
-    `${chip("검사대 비치용")}${title("위험 화물 도감")}<p>이 두 물건이 하나라도 있으면 화물을 보류해요.</p><div class="guideItems">${[4, 5].map((i) => `<figure>${pic("item", i, Orbit.items[i])}<figcaption>${Orbit.items[i]}</figcaption><small>${i === 4 ? "노란 띠와 짧은 심지" : "초록 반점이 있는 보라색 알"}</small></figure>`).join("")}</div><h3>이 물건들은 실어도 좋아요</h3><div class="safeItems">${[0, 1, 2, 3].map((i) => `<div>${pic("item", i, Orbit.items[i])}<small>${Orbit.items[i]}</small></div>`).join("")}</div>${btn("close", "검사 계속하기", "primary")}`,
-  );
+  atlas();
 }
 function missionStrip(active) {
   const m = Orbit.missions[s.stage];
@@ -210,7 +216,7 @@ function nextVisitor(fromButton = true) {
   desk();
 }
 function faceMark(id, mark = 0) {
-  return `<div class="markedFace">${face(id)}${mark ? '<span aria-label="볼 무늬 ' + mark + '줄">' + "▰".repeat(mark) + "</span>" : ""}</div>`;
+  return `<div class="markedFace"><orbit-specimen portrait code="${id + 12 * (mark || 0)}" aria-label="방문객 얼굴, 볼 무늬 ${mark || 0}줄"></orbit-specimen></div>`;
 }
 function matchPanel(v) {
   return `<div class="guideItems facePair"><figure>${faceMark(v.face, v.mark)}<figcaption>운전석에서 본 얼굴</figcaption></figure><figure>${faceMark(v.photo, v.photoMark)}<figcaption>통행증 사진</figcaption></figure></div>`;
@@ -239,10 +245,11 @@ function label(pass) {
   sound(ok ? 680 : 280);
 }
 function notebook(filter = bookTab) {
-  if (!go("book")) return;
+  const inPort = SpacePort.active;
+  if (!inPort && !go("book")) return;
   bookTab = filter;
   const rows = s.rows.filter((r) => r.pass === filter);
-  app.innerHTML = `<section class="console">${missionStrip("book")}<div class="pagePaper"><div class="split"><div><span class="micro">학습 데이터</span><h2>내가 붙인 판정</h2></div>${btn("desk", "검사대로", "secondary")}</div><p>이 목록이 모델의 교과서예요. 단서를 다시 보고 판정을 고칠 수 있어요.</p><div class="bookFilter">${btn("showPass", `통과　${s.rows.filter((r) => r.pass).length}`, filter ? "chosen" : "")}${btn("showHold", `보류　${s.rows.filter((r) => !r.pass).length}`, filter ? "" : "chosen")}</div><div class="records">${
+  const panel = `<section class="console">${inPort ? btn("run", "급행 레일 회수선 조종석", "secondary") : missionStrip("book")}<div class="pagePaper"><div class="split"><div><span class="micro">학습 데이터</span><h2>내가 붙인 판정</h2></div>${btn("desk", "검사대로", "secondary")}</div><p>이 목록이 모델의 교과서예요. 단서를 다시 보고 판정을 고칠 수 있어요.</p><div class="bookFilter">${btn("showPass", `통과　${s.rows.filter((r) => r.pass).length}`, filter ? "chosen" : "")}${btn("showHold", `보류　${s.rows.filter((r) => !r.pass).length}`, filter ? "" : "chosen")}</div><div class="records">${
     rows.length
       ? rows
           .slice()
@@ -254,12 +261,14 @@ function notebook(filter = bookTab) {
           .join("")
       : "<p>아직 이 목록에 방문객이 없어요.</p>"
   }</div></div></section>`;
+  if (inPort) modal(panel);
+  else app.innerHTML = panel;
 }
 function record(id) {
   const r = s.rows.find((x) => x.p.id === id);
   if (!r) return;
   modal(
-    `${chip("학습 사례 다시 보기")}${title(r.p.name + "의 기록")}<div class="reviewFaces"><figure>${faceMark(r.p.face, r.p.mark)}<figcaption>실제 얼굴</figcaption></figure><figure>${faceMark(r.p.photo, r.p.photoMark)}<figcaption>통행증 사진</figcaption></figure>${r.p.bag.map((n, i) => `<figure>${pic("item", n, Orbit.items[n])}<figcaption>짐 ${i + 1}</figcaption></figure>`).join("")}</div><p>검사일 <b>${date(r.p.today)}</b><br>통행증 마지막 날 <b>${date(r.p.until)}</b></p><p>${Orbit.explain(r.p)}</p><p>내 판정　<b>${r.pass ? "통과" : "보류"}</b></p>${btn("flip", `${r.pass ? "보류" : "통과"} 목록으로 옮기기`, "secondary", `data-id="${id}"`)}`,
+    `${chip("학습 사례 다시 보기")}${title(r.p.name + "의 기록")}<div class="reviewFaces"><figure>${faceMark(r.p.face, r.p.mark)}<figcaption>실제 얼굴</figcaption></figure><figure>${faceMark(r.p.photo, r.p.photoMark)}<figcaption>통행증 사진</figcaption></figure>${r.p.bag.map((n, i) => `<figure>${specimen(Cargo.formOf(r.p, i), true)}<figcaption>짐 ${i + 1}</figcaption></figure>`).join("")}</div><p>검사일 <b>${date(r.p.today)}</b><br>통행증 마지막 날 <b>${date(r.p.until)}</b></p><p>${Orbit.explain(r.p)}</p><p>내 판정　<b>${r.pass ? "통과" : "보류"}</b></p>${btn("flip", `${r.pass ? "보류" : "통과"} 목록으로 옮기기`, "secondary", `data-id="${id}"`)}`,
   );
 }
 
@@ -272,7 +281,7 @@ function modelEditor() {
     return;
   }
   modal(
-    `${chip("모델 학습 · 게이트 프로그래밍")}${title("새 방어 모델 만들기")}<p>내가 판정한 ${s.rows.length}개 사례에서 AI가 어떤 단서를 비교할까요?</p><div class="checks">${Orbit.featureNames.map((v, i) => `<label><input type="checkbox" name="feature" value="${i}" ${features.includes(i) ? "checked" : ""}> ${v}</label>`).join("")}</div><h3>예측과 동작 연결</h3><p>AI의 예측을 받으면 게이트가 무엇을 할지 정해요.</p><div class="wires">${["통과", "보류"].map((v, i) => `<label><span>${v}로 예측하면</span><i>→</i><select id="wire${i}"><option value="open" ${wire[i] === "open" ? "selected" : ""}>문 열기</option><option value="hold" ${wire[i] === "hold" ? "selected" : ""}>검사대로 보내기</option></select></label>`).join("")}</div>${btn("train", "이 설정으로 학습하기", "primary")}`,
+    `${chip("모델 학습 · 게이트 프로그래밍")}${title("새 방어 모델 만들기")}<p>내가 판정한 ${s.rows.length}개 사례에서 AI가 어떤 단서를 비교할까요? 화물은 감식실에서 고른 기준과 내가 이름 붙인 표본으로 먼저 분류해요.</p><div class="checks">${Orbit.featureNames.map((v, i) => `<label><input type="checkbox" name="feature" value="${i}" ${features.includes(i) ? "checked" : ""}> ${v}</label>`).join("")}</div><h3>예측과 동작 연결</h3><p>AI의 예측을 받으면 게이트가 무엇을 할지 정해요.</p><div class="wires">${["통과", "보류"].map((v, i) => `<label><span>${v}로 예측하면</span><i>→</i><select id="wire${i}"><option value="open" ${wire[i] === "open" ? "selected" : ""}>문 열기</option><option value="hold" ${wire[i] === "hold" ? "selected" : ""}>검사대로 보내기</option></select></label>`).join("")}</div>${btn("train", "이 설정으로 학습하기", "primary")}`,
   );
 }
 function train() {
@@ -288,6 +297,7 @@ function train() {
   if (
     prev &&
     prev.rev === s.rev &&
+    prev.tree.sensor &&
     String(prev.features) === String(features) &&
     String(prev.wire) === String(wire)
   ) {
@@ -299,7 +309,7 @@ function train() {
     v: ++s.version,
     count: s.rows.length,
     rev: s.rev,
-    tree: Orbit.fit(s.rows, features),
+    tree: Orbit.fit(s.rows, features, Cargo.snapshot(scanState())),
     features: [...features],
     wire: [...wire],
   };
@@ -316,13 +326,18 @@ function train() {
   toast(`모델 ${m.v} 학습 완료 · 사례 ${m.count}개`);
 }
 function lab() {
-  if (!go("lab")) return;
+  const inPort = SpacePort.active;
+  if (!inPort && !go("lab")) return;
   if (s.models.length && !slots.length) slots = [s.models.at(-1).v];
   const m = Orbit.missions[s.stage],
     rolling = live && !live.done;
-  app.innerHTML = `<section class="console">${missionStrip("lab")}<div class="labMain"><div class="labTitle"><div><span class="micro">수송대 자동 방어</span><h2>${rolling ? "수송대 진입 중" : "게이트 관제실"}</h2><p>${m.name} · ${m.n}명 중 ${m.target}명 이상 정확하게 판정하면 항로가 열려요.</p></div>${btn("model", "＋ 모델 학습", "secondary", rolling ? "disabled" : "")}</div>
+  const panel = `<section class="console stationPanel">${inPort ? "" : missionStrip("lab")}<div class="labMain"><div class="benchEntry"><b>별마을 급식 배송 의뢰</b>${btn("workshop", "화물 감식실 열기", "secondary")}</div><div class="labTitle"><div><span class="micro">수송대 자동 방어</span><h2>${rolling ? "수송대 진입 중" : "게이트 관제실"}</h2><p>${m.name} · ${m.n}명 중 ${m.target}명 이상 정확하게 판정하면 항로가 열려요.</p></div>${btn("model", "＋ 모델 학습", "secondary", rolling ? "disabled" : "")}</div>
  ${slots.length ? `<div class="lanes" id="lanes">${slots.map((v, i) => laneCard(v, i, rolling)).join("")}</div><div class="launchBar"><div>${btn("add", "＋ 비교 게이트", "secondary", slots.length >= 4 || rolling ? "disabled" : "")} <small>${slots.length} / 4</small></div>${btn("launch", rolling ? "수송대 이동 중…" : "▶　수송대 출발", "primary", rolling ? "disabled" : "")}</div>` : `<div class="emptyLab"><div class="robotEye">✦</div><h3>첫 게이트에 AI를 장착해요</h3><p>${s.rows.length < 2 ? `사례가 ${2 - s.rows.length}개 더 필요해요. 검사대에서 방문객을 만나세요.` : `모은 사례 ${s.rows.length}개로 첫 모델을 만들어 보세요.`}</p>${s.rows.length < 2 ? btn("desk", "검사하러 가기", "primary") : btn("model", "첫 모델 만들기", "primary")}</div>`}
  <div id="afterLab">${!rolling && s.report ? summaryBlock() : ""}</div></div></section>`;
+  if (inPort) {
+    modal(panel);
+    dlg.classList.add("instrumentPanel");
+  } else app.innerHTML = panel;
   if (rolling) drawTick();
 }
 function laneCard(version, i, rolling) {
@@ -369,7 +384,7 @@ function advance() {
   l.timer = setTimeout(advance, media.matches ? 490 : 980);
 }
 function drawTick() {
-  if (screen !== "lab" || !live) return;
+  if (!document.getElementById("lanes") || !live) return;
   live.lanes.forEach((lane, i) => {
     const el = document.querySelector(`[data-lane="${i}"]`),
       r = lane.results.at(-1);
@@ -423,8 +438,12 @@ function finishWave() {
   }
   save();
   sound(cleared ? 890 : 470);
+  if (SpacePort.active && (!dlg.open || !document.querySelector("#lanes"))) {
+    toast("관제실에 수송대 시험 결과가 도착했어요.");
+    return;
+  }
   lab();
-  $("#afterLab").scrollIntoView({
+  $("#afterLab")?.scrollIntoView({
     behavior: media.matches ? "instant" : "smooth",
     block: "nearest",
   });
@@ -523,7 +542,8 @@ const actions = {
     s.sound = !s.sound;
     soundLabel();
     save();
-    sound();
+    if (s.sound) Radio.play("welcome", true);
+    else Radio.mute();
   },
   next: nextVisitor,
 
@@ -586,7 +606,9 @@ Object.assign(actions, {
 dlg.addEventListener("close", () => {
   if (!dlg.open) SpacePort.finishRead();
 });
-soundLabel();
-home();
-if (location.hash === "#teacher") teacher();
-else if (location.hash === "#enter") enterPort();
+document.addEventListener("DOMContentLoaded", () => {
+  soundLabel();
+  home();
+  if (location.hash === "#teacher") teacher();
+  else if (location.hash === "#enter") enterPort();
+});

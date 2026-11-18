@@ -1,3 +1,6 @@
+mod models;
+mod stack;
+use crate::TRUCK_SCALE;
 use crate::{clamp, Play, ALERT, BEAST, CAPTURE, CHASE, EXIT, HOP, PARK};
 use std::f32::consts::{PI, TAU};
 #[repr(C)]
@@ -22,6 +25,7 @@ pub struct Vertex {
 pub struct World {
     ground: Vec<Vertex>,
     objects: Vec<Vertex>,
+    preview_mesh: Vec<Vertex>,
     pixels: Vec<u32>,
     depth: Vec<f32>,
 }
@@ -95,8 +99,8 @@ impl<'a> Model<'a> {
             let b = [x + r * cb, y, z + r * sb];
             let d = [x + t * cb, y + h, z + t * sb];
             let e = [x + t * ca, y + h, z + t * sa];
-            self.q(c, 0.86 + (sa - ca) * 0.10, a, b, d, e);
-            self.q(c, 1.10, [x, y + h, z], e, d, [x, y + h, z]);
+            self.q(c, 0.86 + (sa - ca) * 0.10, a, e, d, b);
+            self.q(c, 1.10, [x, y + h, z], d, e, [x, y + h, z]);
         }
     }
     fn sign(&mut self, x: f32, z: f32, c: u32) {
@@ -116,23 +120,61 @@ fn truck(
     time: f32,
     rotation: f32,
 ) {
+    let k = (1u64 << 60)
+        | ((color as u64) << 21)
+        | (((flags & 54) as u64) << 4)
+        | ((tier.min(2) as u64) << 2);
+    let mut at = Model::at(v, x, 0., z, scale, rotation);
+    stack::draw(k, 0.105, &mut at, |v| {
+        truck_raw(v, 0., 0., color, flags, tier, 1., 0., 0.)
+    });
+    let _ = time;
+}
+fn truck_raw(
+    v: &mut Vec<Vertex>,
+    x: f32,
+    z: f32,
+    color: u32,
+    flags: i32,
+    tier: i32,
+    scale: f32,
+    time: f32,
+    rotation: f32,
+) {
     let mut m = Model::at(v, x, 0., z, scale, rotation);
     m.block(-0.08, 0.057, -0.15, 6.86, 0.026, 3.0, 0x536272);
     m.block(0., 0.46, 0., 6.45, 0.45, 2.56, INK);
     m.block(-0.1, 0.81, 0., 6.5, 0.29, 2.7, METAL);
     for a in [-2.1, -1.16, 2.12] {
         for side in [-1., 1.] {
-            m.block(a, 0.48, side * 1.28, 0.82, 0.7, 0.25, INK);
+            m.block(a, 0.48, side * 1.28, 0.80, 0.52, 0.25, INK);
+            m.block(a, 0.48, side * 1.28, 0.55, 0.76, 0.25, INK);
             m.block(a, 0.46, side * 1.425, 0.47, 0.41, 0.075, 0x82a7ad);
             m.block(a, 0.45, side * 1.475, 0.23, 0.12, 0.035, AQUA);
         }
     }
     m.block(2.05, 1.38, 0., 2.23, 0.97, 2.68, color);
-    m.block(1.78, 2.04, 0., 1.97, 0.98, 2.38, color);
-    m.block(2.78, 2.05, 0., 0.07, 0.69, 2.02, 0x387987);
-    m.block(1.78, 2.59, 0., 2.14, 0.16, 2.56, IVORY);
+    // Open front and side windows expose the dashboard, chair and seated pilot.
+    m.block(1.16, 2.24, 0., 0.12, 1.38, 2.24, color);
+    m.block(1.70, 1.73, 0.44, 0.82, 0.22, 0.88, NAVY);
+    m.block(1.33, 2.03, 0.44, 0.16, 0.64, 0.84, INK);
+    m.block(2.74, 1.79, 0., 0.32, 0.27, 2.13, 0x465b67);
+    m.block(2.54, 1.91, 0.53, 0.12, 0.33, 0.13, INK);
+    for (dy, dz, w, h) in [
+        (0., 0., 0.48, 0.075),
+        (0.26, 0., 0.48, 0.075),
+        (0.13, -0.21, 0.065, 0.29),
+        (0.13, 0.21, 0.065, 0.29),
+    ] {
+        m.block(2.48, 1.96 + dy, 0.55 + dz, 0.08, h, w, INK);
+    }
+    m.block(1.97, 3.08, 0., 2.27, 0.14, 2.52, IVORY);
     for side in [-1., 1.] {
-        m.block(1.79, 2.12, side * 1.20, 1.43, 0.58, 0.07, 0x2c5468);
+        for x in [0.99, 2.92] {
+            m.block(x, 2.35, side * 1.13, 0.10, 1.45, 0.10, color);
+        }
+        m.block(1.95, 1.71, side * 1.16, 2.13, 0.18, 0.12, color);
+        m.block(1.85, 2.96, side * 1.16, 2.12, 0.07, 0.12, NAVY);
         m.block(1.38, 1.50, side * 1.36, 0.28, 0.075, 0.04, INK);
         m.block(2.53, 2.13, side * 1.46, 0.22, 0.3, 0.16, IVORY);
         m.block(2.93, 1.3, side * 0.95, 0.55, 0.24, 0.40, 0xffe7a3);
@@ -186,6 +228,42 @@ fn person(
     player: bool,
     face: i32,
     mark: i32,
+    seat: f32,
+) {
+    let phase = (walk * 3.).round() as i32;
+    let pos = (seat * 4.).round() as i32;
+    let k = (2u64 << 60)
+        | ((face as u64) << 12)
+        | ((mark as u64) << 8)
+        | (((phase + 3) as u64) << 4)
+        | (pos as u64);
+    let mut at = Model::at(v, x, y, z, 1., yaw);
+    stack::draw(k, 0.049, &mut at, |v| {
+        person_raw(
+            v,
+            0.,
+            0.,
+            0.,
+            0.,
+            phase as f32 / 3.,
+            player,
+            face,
+            mark,
+            pos as f32 / 4.,
+        )
+    });
+}
+fn person_raw(
+    v: &mut Vec<Vertex>,
+    x: f32,
+    y: f32,
+    z: f32,
+    yaw: f32,
+    walk: f32,
+    player: bool,
+    face: i32,
+    mark: i32,
+    seat: f32,
 ) {
     let mut m = Model::at(v, x, y, z, if player { 0.98 } else { 0.82 }, yaw);
     let skin = SKIN[(face as usize) % 12];
@@ -198,8 +276,8 @@ fn person(
         let a = side * walk;
         m.block(
             side * 0.23,
-            0.43 + 0.07 * a.abs(),
-            a * 0.25,
+            0.43 + 0.07 * a.abs() + seat * 0.29,
+            a * 0.25 + seat * 0.21,
             0.36,
             0.63,
             0.4,
@@ -207,18 +285,26 @@ fn person(
         );
         m.block(
             side * 0.23,
-            0.16 + 0.1 * a.abs(),
-            a * 0.29 + 0.08,
+            0.16 + 0.1 * a.abs() + seat * 0.36,
+            a * 0.29 + 0.08 + seat * 0.42,
             0.4,
             0.25,
             0.54,
             INK,
         );
-        m.block(side * 0.54, 1.12, -a * 0.25, 0.26, 0.53, 0.34, suit);
         m.block(
             side * 0.54,
-            0.83,
-            -a * 0.27,
+            1.12,
+            -a * 0.25 + seat * 0.21,
+            0.26,
+            0.53,
+            0.34,
+            suit,
+        );
+        m.block(
+            side * 0.54,
+            0.83 + seat * 0.29,
+            -a * 0.27 + seat * 0.57,
             0.25,
             0.22,
             0.32,
@@ -272,6 +358,12 @@ fn person(
     }
 }
 fn creature(m: &mut Model, t: f32) {
+    let ff = (t * 3.).floor() as i32 % 5;
+    stack::draw((3u64 << 60) + ff as u64, 0.074, m, |v| {
+        creature_raw(&mut Model::at(v, 0., 0., 0., 1., 0.), ff as f32 / 3.)
+    });
+}
+fn creature_raw(m: &mut Model, t: f32) {
     let h = (t * 6.).sin().abs() * 0.48;
     m.block(0., 0.75 + h, 0., 1.03, 0.97, 0.9, 0xa46fba);
     m.block(0., 0.53 + h, 0.445, 0.72, 0.34, 0.07, 0xcf9dbe);
@@ -283,52 +375,59 @@ fn creature(m: &mut Model, t: f32) {
         m.block(k * 0.32, 0.16 + h, 0.08, 0.27, 0.24, 0.46, NAVY);
     }
 }
-fn item(m: &mut Model, id: i32, x: f32, z: f32) {
-    let y = 1.8;
-    match id {
-        0 => {
-            m.block(x, y + 0.2, z, 0.85, 0.4, 0.62, RED);
-            m.block(x, y + 0.42, z, 0.9, 0.1, 0.68, IVORY);
-        }
-        1 => {
-            m.cyl(x, y, z, 0.26, 0.24, 0.65, 8, AQUA);
-            m.cyl(x, y + 0.65, z, 0.15, 0.15, 0.12, 8, GOLD);
-        }
-        2 => {
-            m.block(x, y + 0.16, z, 0.77, 0.3, 0.52, IVORY);
-            m.block(x, y + 0.32, z, 0.81, 0.07, 0.55, 0x6d78ad);
-        }
-        3 => {
-            m.cyl(x, y, z, 0.17, 0.25, 0.36, 8, RED);
-            m.block(x, y + 0.49, z, 0.23, 0.42, 0.14, GRASS);
-        }
-        4 => {
-            m.cyl(x, y, z, 0.24, 0.35, 0.28, 8, INK);
-            m.cyl(x, y + 0.28, z, 0.35, 0.31, 0.14, 8, GOLD);
-            m.cyl(x, y + 0.42, z, 0.31, 0.12, 0.2, 8, INK);
-            m.block(x, y + 0.7, z, 0.07, 0.22, 0.07, RED);
-        }
-        _ => {
-            m.cyl(x, y, z, 0.16, 0.30, 0.25, 8, 0xb483d7);
-            m.cyl(x, y + 0.25, z, 0.30, 0.09, 0.39, 8, 0xb483d7);
-            m.block(x - 0.06, y + 0.31, z + 0.27, 0.11, 0.15, 0.03, GRASS);
-        }
-    }
-}
 impl World {
     pub fn mesh(&self, d: i32) -> &[Vertex] {
-        if d == 0 {
-            &self.ground
-        } else {
-            &self.objects
+        match d {
+            0 => &self.ground,
+            2 => &self.preview_mesh,
+            _ => &self.objects,
         }
+    }
+    pub fn preview(&mut self, kind: i32, code: i32) -> *const Vertex {
+        self.preview_mesh.clear();
+        if kind == 1 {
+            models::ranger(
+                &mut self.preview_mesh,
+                0.,
+                0.,
+                0.,
+                0.,
+                0.,
+                code.clamp(0, 255),
+                0.,
+            );
+        } else if kind == 2 {
+            person(
+                &mut self.preview_mesh,
+                0.,
+                0.,
+                0.,
+                0.,
+                0.,
+                false,
+                code % 12,
+                code / 12,
+                0.,
+            );
+        } else if kind == 3 {
+            truck(&mut self.preview_mesh, 0., 0., 0xcf8f8d, 0, 0, 1., 0., 0.);
+        } else {
+            models::cargo(
+                &mut Model::at(&mut self.preview_mesh, 0., 0., 0., 1., 0.),
+                code,
+                0.,
+                0.,
+                0.,
+            );
+        }
+        self.preview_mesh.as_ptr()
     }
     pub fn build(&mut self, p: &Play) {
         self.ground.clear();
         let mut m = Model::at(&mut self.ground, 0., 0., 0., 1., 0.);
-        m.block(0., -1.4, 0., 200., 2., 160., 0xc18e91);
-        m.block(0., -0.24, 1., 58., 0.46, 28., 0xa6a8a3);
-        m.block(0., 0.00, 0., 55., 0.04, 5.4, 0x687588);
+        m.block(0., -1.4, 0., 200., 2., 160., 0xd8a9b3);
+        m.block(0., -0.24, 1., 58., 0.46, 28., 0x94b9ae);
+        m.block(0., 0.00, 0., 55., 0.04, 5.4, 0x737695);
         for x in -14..15 {
             let a = x as f32 * 2.;
             for z in [-2.58, 2.58] {
@@ -337,7 +436,7 @@ impl World {
         }
         for x in -5..6 {
             let a = x as f32 * 4.;
-            m.block(a, 0.025, 7.4, 0.045, 0.02, 10., 0x7e8d96);
+            m.block(a, 0.025, 7.4, 0.045, 0.02, 10., 0x799a97);
         }
         for (x, z, c) in [
             (6.4, 1.95, GRASS),
@@ -446,6 +545,108 @@ impl World {
             m.block(x, 2.88, -13.5, 3.95, 0.32, 4.05, IVORY);
             m.block(x, 1.48, -11.6, 2.76, 1.84, 0.09, 0x51657c);
         }
+        // Fixed facilities are part of the walkable world; buying a tower rebuilds this mesh.
+        for (x, z, col) in [(-1.65, 8.45, AQUA), (3.7, 9.5, 0xc48fae), (8.2, 9.8, GOLD)] {
+            m.cyl(x, 0.02, z, 0.96, 0.96, 0.13, 8, NAVY);
+            m.cyl(x, 0.15, z, 0.83, 0.83, 0.045, 8, col);
+            m.block(x, 0.93, z + 1., 1.42, 1.75, 0.52, NAVY);
+            m.block(x, 1.24, z + 0.716, 1.1, 0.63, 0.06, col);
+        }
+        let (bx, bz) = (crate::LOCKER_X, crate::LOCKER_Z);
+        m.block(bx, 0.40, bz, 1.50, 0.80, 1.10, 0xb87940);
+        m.block(bx, 0.85, bz, 1.62, 0.11, 1.18, 0xffc76c);
+        m.block(bx, 0.92, bz, 1.40, 0.05, 0.97, 0x4d6265);
+        m.block(bx, 0.49, bz + 0.56, 0.54, 0.27, 0.04, IVORY);
+        m.block(bx, 0.49, bz + 0.59, 0.12, 0.19, 0.03, 0x92662d);
+        m.block(3.7, 1.08, 10.78, 2.54, 2.17, 0.74, 0x9b7998);
+        m.block(3.7, 1.32, 10.34, 1.14, 1.39, 0.10, 0xcce8dc);
+        m.block(-8.8, 0.63, 1.41, 2.18, 1.17, 0.80, NAVY);
+        m.block(-8.8, 1.26, 1.41, 2.28, 0.09, 0.91, AQUA);
+        models::cargo(&mut m, 18, -9.32, 1.31, 1.36);
+        models::cargo(&mut m, 5, -8.35, 1.31, 1.36);
+        if p.tower > 0 {
+            let x = -1.65;
+            let z = 10.15;
+            m.cyl(x, 0., z, 1.00, 0.67, 0.7, 8, METAL);
+            m.cyl(x, 0.7, z, 0.42, 0.30, 2.5, 8, NAVY);
+            m.cyl(x, 3.2, z, 0.94, 0.68, 0.58, 8, AQUA);
+            m.cyl(x, 3.78, z, 0.44, 0.07, 0.63, 8, GOLD);
+            for i in 0..p.filter {
+                m.cyl(x, 1.15 + i as f32 * 0.56, z, 0.50, 0.50, 0.13, 8, GOLD);
+            }
+        }
+        for i in 1..p.tower {
+            let xx = -12.5 + (i % 5) as f32 * 5.2;
+            let zz = -8.1 - (i / 5) as f32 * 3.9;
+            m.cyl(xx, 0., zz, 0.50, 0.39, 0.40, 6, METAL);
+            m.cyl(xx, 0.4, zz, 0.29, 0.19, 2.40, 6, NAVY);
+            m.cyl(xx, 2.8, zz, 0.57, 0.34, 0.34, 6, AQUA);
+            m.cyl(xx, 3.14, zz, 0.19, 0.04, 0.27, 6, GOLD);
+        }
+        // Pixel-cut canopies in stacked slices; all share one cached sprite per palette.
+        for (i, (xx, zz)) in [
+            (-13., -4.7),
+            (-9.1, -5.5),
+            (12.4, -5.8),
+            (17., -4.8),
+            (-13., 8.),
+            (16., 9.),
+            (-17., -9.),
+            (21., -9.),
+            (19., 10.5),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let col = if i % 3 == 0 {
+                0xe7a1b4
+            } else if i % 3 == 1 {
+                0x9fabc9
+            } else {
+                0x87bfaa
+            };
+            let pos = m.v([xx, 0., zz]);
+            let mut place = Model::at(m.v, pos.x, pos.y, pos.z, 1. + (i % 2) as f32 * 0.18, 0.);
+            stack::draw((6u64 << 60) + col as u64, 0.18, &mut place, |v| {
+                let mut a = Model::at(v, 0., 0., 0., 1., 0.);
+                a.block(0., 1.05, 0., 0.37, 2.1, 0.44, 0x9b7773);
+                for (x, y, z, r) in [
+                    (-0.66, 1.93, 0.12, 0.82),
+                    (0.61, 2.04, -0.22, 0.85),
+                    (0., 2.62, 0., 1.08),
+                    (0.14, 3.08, -0.12, 0.66),
+                ] {
+                    a.cyl(x, y, z, r * 0.61, r, 0.29, 8, col);
+                    a.cyl(x, y + 0.29, z, r, r * 0.57, 0.42, 8, col);
+                }
+                for (x, y, z) in [
+                    (-0.53, 2.49, 0.76),
+                    (0.23, 3.19, 0.71),
+                    (0.76, 2.45, 0.46),
+                    (-0.68, 2.22, 0.81),
+                ] {
+                    a.block(x, y, z, 0.20, 0.14, 0.15, 0xffdbbc);
+                }
+            });
+        }
+        for i in 0..38 {
+            let x = -19. + (i * 13 % 42) as f32;
+            let z = if i % 2 == 0 {
+                -4.9 - (i % 3) as f32 * 0.56
+            } else {
+                10.3 + (i % 3) as f32 * 0.4
+            };
+            m.block(x, 0.19, z, 0.09, 0.34, 0.09, 0x608d82);
+            m.block(
+                x,
+                0.38,
+                z,
+                0.29,
+                0.13,
+                0.23,
+                if i % 3 == 0 { 0xf1bcad } else { 0xf2dd9b },
+            );
+        }
         let cx = 15.5;
         let cz = -20.;
         for i in 0..5 {
@@ -551,7 +752,7 @@ impl World {
             [0xea975d, 0x76b4b1, 0xe5bb65, 0x9399c9][p.face as usize % 4],
             p.flags,
             p.tier,
-            1.,
+            TRUCK_SCALE,
             if p.phase == PARK {
                 0.
             } else {
@@ -586,45 +787,88 @@ impl World {
             tug.block(-0.43, -0.08, 0., 0.85, 0.12, 2.69, RED);
             tug.block(-1.64, 0., 0., 0.37, 0.18, 0.83, AQUA);
         }
+        let turn = if diverted > 0. && diverted < 4.8 {
+            0.34_f32
+        } else {
+            0.
+        };
+        let (st, ct) = turn.sin_cos();
         let d = p.driver;
-        let mut driver_z = 1.15 + d * 1.29 - diverted;
-        let mut driver_x = p.truck + 1.77;
-        if p.phase == HOP || (p.phase == CAPTURE && p.incident == 3) {
+        let seated_x = p.truck + (1.85 * ct + 0.55 * st) * TRUCK_SCALE;
+        let seated_z = (-1.85 * st + 0.55 * ct) * TRUCK_SCALE - diverted;
+        let slide = (d / 0.63).clamp(0., 1.);
+        let drop = ((d - 0.45) / 0.55).clamp(0., 1.);
+        let mut driver_x = seated_x * (1. - slide) + (p.truck + 2.38) * slide;
+        let mut driver_z = seated_z * (1. - slide) + 2.62 * slide;
+        let fleeing = matches!(p.phase, CHASE | HOP) || p.flags & 4096 != 0;
+        if fleeing {
             driver_x = p.tx;
             driver_z = p.tz;
         }
         person(
             v,
             driver_x,
-            if p.phase == HOP {
-                (t * 4.).sin().abs() * 1.15
+            if fleeing {
+                if p.phase == HOP {
+                    (t * 4.).sin().abs() * 0.92
+                } else {
+                    0.
+                }
             } else {
-                1.0 * (1. - d)
+                1.43 * TRUCK_SCALE * (1. - drop)
             },
             driver_z,
-            0.,
-            0.,
+            if fleeing {
+                1.65
+            } else {
+                (0.63 + turn) * (1. - d)
+            },
+            if fleeing && (p.phase == CHASE || p.phase == HOP) {
+                (t * 12.).sin()
+            } else {
+                0.
+            },
             false,
             p.face,
             p.mark,
+            if fleeing { 0. } else { 1. - d },
         );
-        person(
+        models::ranger(
             v,
             p.x,
             p.y,
             p.z,
             p.facing,
             p.stride.sin() * p.moving,
-            true,
-            0,
-            0,
+            p.look_code,
+            (p.aim * 1.5).clamp(0., 1.),
         );
-        {
-            let mut m = Model::at(v, p.truck, 0., 0., 1., 0.);
-            for i in 0..2 {
-                if p.flags & (if i == 0 { 2 } else { 4 }) != 0 || (p.tier < 2 && p.flags & 2 != 0) {
-                    item(&mut m, p.bag[i], -1.15, if i == 0 { 0.65 } else { -0.65 });
-                }
+        for i in 0..2 {
+            if p.flags & (if i == 0 { 2 } else { 4 }) == 0 && !(p.tier < 2 && p.flags & 2 != 0) {
+                continue;
+            }
+            let [x, y, z] = p.goods(i);
+            let held = p.held == i as i32;
+            let scale = if held {
+                1.72
+            } else if p.seized(i) {
+                0.85
+            } else {
+                TRUCK_SCALE
+            };
+            let start = v.len();
+            models::cargo(&mut Model::at(v, 0., 0., 0., 1., 0.), p.bag[i], 0., 0., 0.);
+            let (sp, cp) = p.twist[i][1].sin_cos();
+            let (sy, cy) = (p.twist[i][0] + if p.placed[i] || held { 0. } else { turn }).sin_cos();
+            for v in &mut v[start..] {
+                let u = v.p;
+                let h = u.y - 0.34;
+                let zz = u.z * cp - h * sp;
+                v.p = V::new(
+                    x + (u.x * cy + zz * sy) * scale,
+                    y + (h * cp + u.z * sp + 0.34) * scale,
+                    z + (-u.x * sy + zz * cy) * scale,
+                );
             }
         }
         if p.phase == BEAST
@@ -650,8 +894,22 @@ impl World {
                     );
                 }
             }
+            if p.beam[4] > 0. {
+                for i in 0..12 {
+                    let (dx, dz) = (i as f32 * TAU / 12.).sin_cos();
+                    m.block(
+                        p.beam[2] + dx * 0.46,
+                        1.08 + 0.29 * dz,
+                        p.beam[3] + dz * 0.33,
+                        0.14,
+                        0.085,
+                        0.10,
+                        0xa9ffcc,
+                    );
+                }
+            }
             if p.phase == CAPTURE {
-                let radius = if p.incident == 1 { 2.05 } else { 0.92 };
+                let radius = if p.incident == 2 { 1.02 } else { 0.84 };
                 for i in 0..10 {
                     let (a, b) = (i as f32 * TAU / 10.).sin_cos();
                     m.block(
@@ -691,6 +949,14 @@ impl World {
         for mesh in [&self.ground, &self.objects] {
             for tri in mesh.chunks_exact(3) {
                 let vs = [cam.view(tri[0].p), cam.view(tri[1].p), cam.view(tri[2].p)];
+                if vs.iter().all(|v| v[2] < 0.25)
+                    || vs.iter().all(|v| v[0] < -v[2])
+                    || vs.iter().all(|v| v[0] > v[2])
+                    || vs.iter().all(|v| v[1] < -v[2])
+                    || vs.iter().all(|v| v[1] > v[2])
+                {
+                    continue;
+                }
                 let mut polygon = [[0.; 3]; 4];
                 let mut n = 0;
                 let mut prev = vs[2];
@@ -751,7 +1017,7 @@ fn paint_triangle(
     color: u32,
 ) {
     let den = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
-    if den.abs() < 0.08 {
+    if den >= -0.08 {
         return;
     }
     let l = a[0].min(b[0]).min(c[0]).max(0.) as usize;

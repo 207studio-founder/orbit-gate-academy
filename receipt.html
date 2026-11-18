@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>오르빗 게이트 · 교사 제출 확인</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="patrol.css?v=31" />
+  </head>
+  <body>
+    <main class="receiptDesk">
+      <small>제7 우주항 · 교사용</small>
+      <h1>제출받은 허가증 확인</h1>
+      <p>
+        학생이 실제로 제출한 PDF 또는 PNG 상단의 허가증 번호 여섯 자리를
+        입력하세요. 화면에 나온 다섯 자리 확인 번호를 학생에게 알려주면 무한
+        모드가 열립니다.
+      </p>
+      <form id="make">
+        <label
+          >허가증 번호
+          <input
+            id="serial"
+            required
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            autocomplete="off" /></label
+        ><button class="primary">제출 확인 번호 발급</button>
+      </form>
+      <p id="answer" role="status"></p>
+      <a href="teacher.html">교사용 수업 슬라이드</a>
+    </main>
+    <script>
+      document.getElementById("make").onsubmit = (e) => {
+        e.preventDefault();
+        const id = document.getElementById("serial").value;
+        if (/^\d{6}$/.test(id))
+          document.getElementById("answer").textContent =
+            "허가증 " +
+            id +
+            "의 제출 확인 번호　" +
+            String((Number(id) * 137 + 91873) % 100000).padStart(5, "0");
+      };
+    </script>
+  </body>
+</html>

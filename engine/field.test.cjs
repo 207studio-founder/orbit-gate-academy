@@ -49,13 +49,13 @@ test("inspect both sides, uncover cargo, and pay a correct decision once", () =>
   walk(-1.5, 2.16);
   assert.equal(use(), 9);
   assert.equal(use(), 2);
-  walk(-4.3, 2.2);
-  walk(-4.3, -2.05);
+  walk(-5.2, 2.2);
+  walk(-5.2, -2.05);
   walk(-2.75, -2.05);
   assert.equal(use(), 9);
   assert.equal(use(), 3);
-  walk(4.4, -2.05);
-  walk(4.4, 3.3);
+  walk(5.15, -2.05);
+  walk(5.15, 3.3);
   walk(6.4, 5.85);
   assert.equal(use(), 5);
   assert.equal(g.reward(1), 16);
@@ -74,7 +74,11 @@ test("manual capture, hidden monster, electrical fence and turret resolve only o
     g.arrival(0, 0, 1, 2, 1, incident, flags, 0);
     assert.equal(g.take_event(), 11 + incident);
     advance(40);
-    if (manual) assert.equal(use(10), 20);
+    if (manual) {
+      assert.equal(use(10), 29);
+      advance(8);
+      assert.equal(g.take_event(), 20);
+    }
     advance(manual ? 25 : 160);
     assert.equal(bank()[1], 3);
     assert.equal(bank()[9], 1);
@@ -116,9 +120,9 @@ test("bribe is recorded and audited once; rejecting preserves trust", () => {
     assert.equal(bank()[0], 36 - 3 * take);
   }
 });
-test("lane income needs a model; gear has capped levels; condo needs a lane and successful defense", () => {
+test("lane income needs a model; gear has capped levels; condo purchase needs the progression entitlement", () => {
   const { g, bank, advance } = gate(900);
-  assert.equal(g.buy(5, 1), 3);
+  assert.equal(g.buy(5, 0), 3);
   assert.equal(g.buy(0, 0), 0);
   assert.equal(g.buy(5, 0), 3);
   advance(245);
@@ -144,4 +148,143 @@ test("lane income needs a model; gear has capped levels; condo needs a lane and 
   const poor = gate(1);
   assert.equal(poor.g.buy(1, 0), 2);
   assert.equal(poor.bank()[0], 1);
+});
+
+function mark(g, id) {
+  return Array.from(new Float32Array(g.memory.buffer, g.project(id, 1.6), 3));
+}
+test("mouse picks up the nearby 3D cargo, spins it and puts it down in the world", () => {
+  const { g, walk, use, advance } = gate();
+  g.arrival(1, 0, 18, 11, 0, 0, 0, 0);
+  advance(70);
+  walk(-1.7, 2.65);
+  assert.equal(use(), 2);
+  const [x, y] = mark(g, 14);
+  assert.equal(g.touch_cargo(x, y, 1.6), 1);
+  assert.equal(g.held_item(), 0);
+  g.turn_item(1.2, 0.9);
+  assert.equal(g.touch_cargo(0.45, -0.5, 1.6), 2);
+  assert.equal(g.held_item(), -1);
+  const dropped = mark(g, 14);
+  assert.notDeepEqual(dropped, [x, y, mark(g, 14)[2]]);
+  assert.equal(g.touch_cargo(dropped[0], dropped[1], 1.6), 1);
+});
+test("permit requires disembarkation, medical lookup is separate, missed unsafe passage incurs debt", () => {
+  const { g, walk, use, bank } = gate(7);
+  g.arrival(2, 0, 4, 1, 0, 0, 3, 0);
+  g.require_docs(1, 1);
+  walk(6.4, 1.95);
+  assert.equal(use(), 27);
+  walk(2.55, 2.65);
+  assert.equal(g.read_doc(1), 0);
+  assert.equal(use(11), 10);
+  assert.equal(g.read_doc(1), 1);
+  walk(6.4, 1.95);
+  assert.equal(use(), 28);
+  walk(2.55, 2.65);
+  assert.equal(g.read_doc(2), 1);
+  walk(6.4, 1.95);
+  assert.equal(use(), 4);
+  assert.equal(g.reward(0), -12);
+  assert.equal(bank()[0], -5);
+  assert.equal(g.reward(0), 0);
+});
+test("discovering a live monster immediately holds the truck through refresh and capture", () => {
+  const { g, bank, advance, use, walk, snap } = gate();
+  walk(-1.7, 2.65);
+  g.arrival(1, 0, 0, 2, 1, 2, 2, 0);
+  assert.equal(g.take_event(), 13);
+  assert.ok((bank()[10] & 512) !== 0);
+  g.arrival(1, 0, 0, 2, 1, 2, bank()[10], 0);
+  assert.equal(g.take_event(), 13);
+  advance(41);
+  assert.equal(use(10), 29);
+  advance(8);
+  assert.equal(g.take_event(), 20);
+  advance(24);
+  assert.equal(snap()[7], 2);
+  assert.equal(snap()[19], 0);
+});
+test("a driver with an illicit core resists the permit search; aimed nets can visibly miss", () => {
+  const { g, walk, use, advance, snap } = gate();
+  g.arrival(1, 0, 4, 1, 0, 5, 3, 0);
+  walk(2.55, 2.65);
+  assert.equal(use(11), 10);
+  assert.equal(g.read_doc(1), 1);
+  g.after_read(4);
+  assert.equal(g.take_event(), 12);
+  advance(44);
+  assert.equal(snap()[7], 4);
+  const t0 = snap()[6];
+  g.aim_net(-0.95, 0.99, 1.6);
+  assert.equal(g.take_event(), 29);
+  advance(23);
+  assert.equal(g.take_event(), 23);
+  assert.equal(snap()[6], t0);
+});
+test("evidence locker accepts the undeclared item once, preserves legal cargo, and releases the driver", () => {
+  const { g, walk, use, bank } = gate();
+  g.arrival(0, 0, 3, 1, 0, 0, 3, 0);
+  g.cargo_law(1, 0);
+  walk(6.4, 1.95);
+  assert.equal(use(), 39);
+  walk(-1.7, 2.65);
+  let [x, y] = mark(g, 15);
+  assert.equal(g.touch_cargo(x, y, 1.6), 1);
+  walk(0.45, 4.60);
+  assert.equal(use(), 38);
+  assert.equal(g.held_item(), 1);
+  g.touch_cargo(-0.4, -0.65, 1.6);
+  walk(-1.7, 2.65);
+  [x, y] = mark(g, 14);
+  assert.equal(g.touch_cargo(x, y, 1.6), 1);
+  walk(0.45, 4.60);
+  [x, y] = mark(g, 17);
+  assert.equal(g.touch_cargo(x, y, 1.6), 4);
+  assert.equal(g.take_event(), 35);
+  assert.equal(g.held_item(), -1);
+  assert.equal(use(), 37);
+  const flags = bank()[10];
+  g.arrival(0, 0, 3, 1, 0, 0, flags, 0);
+  g.cargo_law(1, 0);
+  assert.equal((bank()[10] >> 13) & 3, 1);
+  walk(6.4, 1.95);
+  assert.equal(use(), 4);
+  assert.equal(g.reward(1), 16);
+});
+test("high-risk permit is checked against visible evidence before capture; a licensed driver may pass", () => {
+  const { g, walk, use, advance, bank, snap } = gate();
+  g.arrival(0, 0, 5, 1, 0, 5, 1, 0);
+  g.require_docs(1, 0);
+  g.cargo_law(0, 1);
+  walk(2.55, 2.65);
+  assert.equal(use(11), 10);
+  assert.equal(g.read_doc(1), 1);
+  g.after_read(4);
+  assert.equal(g.take_event(), 0);
+  walk(-1.7, 2.65);
+  assert.equal(use(), 2);
+  g.after_read(2);
+  assert.equal(g.take_event(), 12);
+  advance(42);
+  walk(snap()[12], 2.65);
+  assert.equal(use(10), 29);
+  advance(8);
+  assert.equal(g.take_event(), 20);
+  advance(32);
+  walk(6.4, 1.95);
+  assert.equal(use(), 40);
+  walk(6.4, 5.85);
+  assert.equal(use(), 5);
+  g.arrival(0, 0, 5, 1, 0, 0, 3, 0);
+  g.cargo_law(0, 0);
+  g.require_docs(1, 0);
+  walk(2.55, 2.65);
+  assert.equal(use(11), 10);
+  assert.equal(g.read_doc(1), 1);
+  g.after_read(4);
+  assert.equal(g.take_event(), 0);
+  walk(6.4, 1.95);
+  assert.equal(use(), 4);
+  assert.equal(bank()[9], 1);
 });

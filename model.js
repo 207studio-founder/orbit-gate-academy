@@ -127,10 +127,28 @@ const Orbit = (() => {
     const p = caseOf(
       (salt + serial * 9277) >>> 0,
       "T" + serial,
-      serial < lessonTypes.length ? lessonTypes[serial] : Math.floor(r() * 7),
+      serial < 3
+        ? lessonTypes[serial]
+        : Traffic.groups[Traffic.group()].types[serial % 8],
       dateFor(Math.floor(serial / 3)),
     );
-    return markings(p, serial, serial * 37 + salt);
+    if (serial === 3) p.bag[0] = 4;
+    return paperwork(
+      markings(p, serial, serial * 37 + salt),
+      salt + serial * 117,
+      serial,
+      false,
+    );
+  }
+  function groupCase(n, g, salt) {
+    const types = Traffic.groups[g].types;
+    const p = caseOf(
+      (salt + n * 5297 + g * 131) >>> 0,
+      "A" + n,
+      types[(n + (salt % 8)) % types.length],
+      dateFor(n % 99),
+    );
+    return paperwork(markings(p, g * 5, n + salt), salt + n * 203, n, true);
   }
   function wave(round, stage, salt) {
     const m = missions[stage],
@@ -151,27 +169,107 @@ const Orbit = (() => {
         dateFor(round * 3 + 7),
       ),
     );
-    return batch.map((p, i) => markings(p, stage * 5, round * 13 + i));
+    return batch.map((p, i) =>
+      paperwork(
+        markings(p, stage * 5, round * 13 + i),
+        salt + round * 541 + i * 37,
+        i + round,
+        true,
+      ),
+    );
   }
-  function evidence(p) {
+  function mismatch(p) {
+    return p.face !== p.photo || (p.mark || 0) !== (p.photoMark || 0);
+  }
+  function paperwork(p, seed, number, test) {
+    const rand = rng(seed);
+    p.forms = p.bag.map(() =>
+      test ? 4 + Math.floor(rand() * 2) : Math.floor(rand() * 4),
+    );
+    if (number >= 2 && number % 4 === 2 && !p.bag.some((k) => k >= 4)) {
+      const slot = (number >> 2) % 2;
+      p.bag[slot] = number % 8 === 2 ? 3 : 1;
+      p.manifest = [...p.bag];
+      p.manifest[slot] = slot === 0 ? 0 : 2;
+    } else p.manifest = [...p.bag];
+    let held = p.bag.find((k) => k >= 4);
+    if (held !== undefined) {
+      const v = number % 4;
+      if (v !== 1)
+        p.permit = {
+          owner: p.id,
+          kind: v === 3 ? (held === 4 ? 5 : 4) : held,
+          until: v === 0 ? iso(Date.parse(p.today) - day) : p.today,
+        };
+    }
+    if (mismatch(p) && number % 4 !== 1) {
+      const valid = number % 4 !== 0;
+      p.medical = {
+        owner: valid ? p.id : p.id + "-B",
+        face: p.face,
+        mark: p.mark || 0,
+        date: p.today,
+        reason:
+          p.face === p.photo
+            ? "회복 중 볼의 무늬 수가 달라짐"
+            : "탈피 치료 뒤 얼굴빛과 외형이 달라짐",
+      };
+    }
+    return p;
+  }
+  function certified(p, k) {
+    const d = p.permit;
+    return !!d && d.owner === p.id && d.kind === k && d.until >= p.today;
+  }
+  function medicalMatch(p) {
+    const d = p.medical;
+    return (
+      !!d &&
+      d.owner === p.id &&
+      d.face === p.face &&
+      d.mark === (p.mark || 0) &&
+      d.date <= p.today
+    );
+  }
+  function unreported(p, i, k = p.bag[i]) {
+    return !!p.manifest && (k === 1 || k === 3) && k !== p.manifest[i];
+  }
+  function lowMask(p) {
+    return p.bag.reduce(
+      (mask, k, i) => mask | (unreported(p, i, k) ? 1 << i : 0),
+      0,
+    );
+  }
+  function highRisk(p) {
+    return p.bag.some((k) => k >= 4 && !certified(p, k));
+  }
+  function evidence(p, sensor) {
+    const kinds = sensor
+      ? p.bag.map((_, i) => Cargo.nearest(sensor, Cargo.formOf(p, i)).label)
+      : p.bag;
     return [
       +(p.until < p.today),
-      +(p.face !== p.photo || (p.mark || 0) !== (p.photoMark || 0)),
-      +p.bag.includes(4),
-      +p.bag.includes(5),
+      +(mismatch(p) && !medicalMatch(p)),
+      +(kinds.includes(4) && !certified(p, 4)),
+      +(kinds.includes(5) && !certified(p, 5)),
+      +kinds.some(
+        (k, i) => unreported(p, i, k) && !((p.seized || 0) & (1 << i)),
+      ),
     ];
   }
   const reasons = [
     "통행증의 마지막 날이 지났어요.",
-    "사진과 방문객의 얼굴이 달라요.",
-    "화물칸에 핵폭탄이 있어요.",
-    "화물칸에 우주 괴물의 알이 있어요.",
+    "사진 차이에 맞는 메디컬 기록이 없어요.",
+    "핵폭탄을 운반할 유효한 허가증이 없어요.",
+    "괴물 알을 운반할 유효한 허가증이 없어요.",
+    "신고서에 없는 신고 대상 음료나 화분이 남아 있어요.",
   ];
   const featureNames = [
     "통행증 날짜",
-    "얼굴과 사진",
-    "핵폭탄 모양",
-    "괴물 알 모양",
+    "사진과 메디컬 기록",
+    "핵폭탄 감식과 허가증",
+    "괴물 알 감식과 허가증",
+    "화물 신고와 압수 기록",
   ];
   function allowed(p) {
     return !evidence(p).some(Boolean);
@@ -180,12 +278,29 @@ const Orbit = (() => {
     return (
       evidence(p)
         .flatMap((x, i) => (x ? [reasons[i]] : []))
-        .join(" ") || "날짜와 얼굴이 맞고, 두 칸 모두 허용된 짐이에요."
+        .join(" ") ||
+      [
+        mismatch(p)
+          ? "메디컬 기록이 얼굴 변화를 설명해요."
+          : "날짜와 사진이 맞아요.",
+        p.seized
+          ? "미신고 저위험 물품은 압수했어요."
+          : p.bag.some((k) => k >= 4)
+            ? "위험 화물 허가증도 유효해요."
+            : "남은 짐을 반입할 수 있어요.",
+      ].join(" ")
     );
   }
   // A binary decision tree learns splits and leaf votes solely from the student's labels.
-  function fit(rows, features = [0, 1, 2, 3]) {
-    const samples = rows.map((row) => ({ x: evidence(row.p), y: !!row.pass }));
+  function fit(
+    rows,
+    features = [0, 1, 2, 3, 4],
+    sensor = Cargo.snapshot(Cargo.starter()),
+  ) {
+    const samples = rows.map((row) => ({
+      x: evidence(row.p, sensor),
+      y: !!row.pass,
+    }));
     const impurity = (xs) => {
       if (!xs.length) return 0;
       const p = xs.filter((x) => x.y).length / xs.length;
@@ -212,10 +327,17 @@ const Orbit = (() => {
         right: build(best.b, rest),
       };
     }
-    return build(samples, [...features]);
+    return { ...build(samples, [...features]), sensor };
   }
   function predict(tree, p) {
-    const x = evidence(p);
+    const x = tree.sensor
+      ? evidence(p, tree.sensor)
+      : [
+          +(p.until < p.today),
+          +mismatch(p),
+          +p.bag.includes(4),
+          +p.bag.includes(5),
+        ];
     while (tree.f !== undefined) tree = x[tree.f] ? tree.right : tree.left;
     return tree.value;
   }
@@ -226,6 +348,13 @@ const Orbit = (() => {
     return { p, prediction, open, safe, ok: open === safe };
   }
   return {
+    groupCase,
+    mismatch,
+    certified,
+    medicalMatch,
+    unreported,
+    lowMask,
+    highRisk,
     species,
     items,
     missions,

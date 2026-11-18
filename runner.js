@@ -11,15 +11,17 @@ const DockRun = (() => {
   function art(kind, id) {
     const k = kind + id;
     if (!images.has(k)) {
-      const im = new Image();
-      im.src = `assets/${kind}-${id}.webp`;
+      const im = document.createElement("canvas");
+      im.width = im.height = 80;
+      PortCore.load().then((api) =>
+        PortArt.render(im, PortArt.mesh(api, 0, id), 0, 0.54, 0.24, 1),
+      );
       images.set(k, im);
     }
     return images.get(k);
   }
   function sprite(im, x, y, w, h) {
-    if (im.complete && im.naturalWidth)
-      ctx.drawImage(im, x - w / 2, y - h, w, h);
+    if (im.width) ctx.drawImage(im, x - w / 2, y - h, w, h);
   }
   function path(color, points) {
     ctx.fillStyle = color;
@@ -294,7 +296,7 @@ const DockRun = (() => {
   }
   document.addEventListener("keydown", (e) => {
     if (!run || dlg.open || e.repeat) return;
-    const k = e.key.toLowerCase();
+    const k = { KeyA: "a", KeyD: "d" }[e.code] || e.key.toLowerCase();
     if (["arrowleft", "arrowright", "a", "d"].includes(k)) {
       e.preventDefault();
       move(run.lane + (["arrowleft", "a"].includes(k) ? -1 : 1));
@@ -315,8 +317,9 @@ const DockRun = (() => {
 })();
 let recovered = 0;
 function runIntro() {
+  if (dlg.open) close();
   if (!go("run")) return;
-  app.innerHTML = `<section class="console">${missionStrip("run")}<div class="runIntro"><div><span class="micro">화물 회수반 · 보너스 임무</span><h2>급행 레일 출동</h2><p>급식과 축제 물품이 레일에 쏟아졌어요. 회수선을 좌우로 옮겨 안전한 짐을 실으세요. 보호막 3개로 화물 12묶음에 도전해요.</p><div class="actions">${btn("runGo", "▶　회수선 출발", "primary")}${btn("hazard", "위험 화물 도감", "secondary")}</div></div><div class="introCargo">${pic("item", 0, "급식 도시락")}${pic("item", 5, "우주 괴물의 알")}</div></div></section>`;
+  app.innerHTML = `<section class="console">${missionStrip("run")}<div class="runIntro"><div><span class="micro">화물 회수반 · 보너스 임무</span><h2>급행 레일 출동</h2><p>급식과 축제 물품이 레일에 쏟아졌어요. 회수선을 좌우로 옮겨 안전한 짐을 실으세요. 보호막 3개로 화물 12묶음에 도전해요.</p><div class="actions">${btn("runGo", "▶　회수선 출발", "primary")}${btn("hazard", "위험 화물 도감", "secondary")}</div></div><div class="introCargo">${specimen(0)}${specimen(5)}</div></div></section>`;
 }
 function runGo() {
   if (DockRun.active) return;
