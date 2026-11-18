@@ -134,6 +134,7 @@ function go(name) {
     return false;
   }
   if (typeof DockRun !== "undefined") DockRun.stop();
+  if (typeof Lesson !== "undefined") Lesson.stop();
   SpacePort.stop();
   close();
   screen = name;
@@ -142,17 +143,17 @@ function go(name) {
 }
 function home() {
   if (!go("home")) return;
-  app.innerHTML = `<section class="cover"><div class="hero"><div class="heroCopy"><span class="portTag"><i></i> 제7 우주항 방어대</span><h1>오르빗<br>게이트</h1><p>마지막 셔틀이 떠나기 전,<br>나만의 AI로 우주항을 지켜라!</p>${btn("start", `<span class="playTri">▶</span> ${s.serial || s.rows.length ? "이어서 근무하기" : "첫 근무 시작"}`, "primary heroBtn")}</div><span class="coverSerial">OG – 07 &nbsp;/&nbsp; LUNAR PORT</span></div><div class="boarding"><div class="ticketIcon"><span>✦</span></div><div><small>오늘의 운항 임무</small><h2>${Orbit.missions[s.stage].name}</h2></div><div class="boardingLine"></div><div class="ticketEnd"><small>도착지</small><b>${Orbit.missions[s.stage].place}</b></div><div class="barcode" aria-hidden="true"></div></div></section>
+  app.innerHTML = `<section class="cover"><div class="hero"><div class="heroCopy"><span class="portTag"><i></i> 제7 우주항 방어대</span><h1>오르빗<br>게이트</h1><p>우주 트럭을 검사하고, AI를 훈련해<br>나만의 우주항을 키워라!</p>${btn("start", `<span class="playTri">▶</span> ${s.serial || s.rows.length ? "이어서 근무하기" : "첫 근무 시작"}`, "primary heroBtn")}</div><span class="coverSerial">OG – 07 &nbsp;/&nbsp; LUNAR PORT</span></div><div class="boarding"><div class="ticketIcon"><span>✦</span></div><div><small>오늘의 운항 임무</small><h2>${Orbit.missions[s.stage].name}</h2></div><div class="boardingLine"></div><div class="ticketEnd"><small>도착지</small><b>${Orbit.missions[s.stage].place}</b></div><div class="barcode" aria-hidden="true"></div></div></section>
  <div class="homefoot"><span>초등 6학년 실과 · 인공지능이 만들어지는 과정</span><span>개인 플레이 &nbsp; / &nbsp; 최대 4개 게이트</span></div>`;
 }
 function guide() {
   modal(
-    `${chip("신입 대원 안내서")}${title("첫 근무, 이렇게 해요")}<ol class="steps"><li><b>방문객을 살펴요.</b> 오늘 날짜와 통행증의 마지막 날, 실제 얼굴과 사진을 비교해요. 마지막 날 당일까지 쓸 수 있어요.</li><li><b>화물칸을 열어요.</b> 두 칸의 물건을 위험 화물 도감과 비교해요. 날짜·얼굴·짐이 모두 맞으면 통과, 다시 살펴야 하면 보류예요.</li><li><b>내 판정으로 AI를 가르쳐요.</b> 사례 2개부터 모델을 만들 수 있어요. 어떤 단서를 줄지 고른 뒤, 예측마다 게이트 동작을 연결해요.</li><li><b>새 수송대를 맞이해요.</b> 1~4개 게이트가 같은 방문객을 어떻게 처리하는지 지켜보세요. 실수한 사례를 다시 검사해 모델을 개선해요.</li></ol>${btn("close", "알겠어요", "primary")}`,
+    `${chip("제7 우주항 현장 수첩")}${title("근무 조작")}<p><b>WASD / 방향키</b> 이동　<b>Space</b> 점프　<b>Shift</b> 달리기<br><b>마우스 드래그 / Z·C</b> 시점　<b>휠</b> 확대</p><ol class="steps"><li>운전석 가까이에서 E로 서류를 받고 Q로 하차를 요청해요. 날짜와 얼굴 무늬를 비교해요.</li><li>화물칸으로 이동해 E로 천을 걷고 짐을 확인해요. 초록 또는 주황 레버 곁에서 E로 판정해요.</li><li>경보가 울리면 대상을 따라가 F로 그물을 쏘세요. 보호막은 3개예요.</li><li>사례 2개를 모으면 AI를 학습시켜요. 정비소에서 번 돈으로 운송 레일과 방어 장비를 사고 우주 콘도에 도전하세요.</li></ol><div class="actions">${btn("close", "돌아가기", "primary")}<a href="teacher.html" class="button secondary" target="_blank" rel="noopener">수업 슬라이드</a></div>`,
   );
 }
 function teacher() {
   modal(
-    `${chip("교실용 탑승권")}${title("QR로 우주항 입장")}<div class="qrpair"><img src="assets/join.png" alt="학생 게임 접속 QR코드"><div><b>크롬북 카메라로 스캔하세요.</b><p>학생은 각자 자기 기기에서 시작을 눌러요. 이 브라우저에 진행 상황이 저장됩니다.</p><a href="${PUBLIC}" target="_blank" rel="noopener">${PUBLIC}</a></div></div><h3>40분 수업 예시</h3><p>입장·첫 안내 5분 → 통행증과 화물 검사 12분 → 모델 학습·게이트 연결·비교 15분 → 생활 속 사례로 돌아보기 8분</p><div class="note">마무리 질문　“내가 탈 수 있는 셔틀을 AI가 잘못 막았다면, 누가 무엇을 다시 살펴야 할까?”</div><a class="button primary" href="assets/join.png" download="오르빗게이트-학생QR.png">QR코드 저장</a>`,
+    `${chip("교실용 탑승권")}${title("QR로 우주항 입장")}<div class="qrpair"><img src="assets/join.png" alt="학생 게임 접속 QR코드"><div><b>크롬북 카메라로 스캔하세요.</b><p>학생은 각자 자기 기기에서 시작을 눌러요. 이 브라우저에 진행 상황이 저장됩니다.</p><a href="${PUBLIC}" target="_blank" rel="noopener">${PUBLIC}</a></div></div><h3>40분 수업 예시</h3><p>입장·첫 안내 5분 → 통행증과 화물 검사 12분 → 모델 학습·게이트 연결·비교 15분 → 생활 속 사례로 돌아보기 8분</p><div class="note">마무리 질문　“내가 탈 수 있는 셔틀을 AI가 잘못 막았다면, 누가 무엇을 다시 살펴야 할까?”</div><a class="button primary" href="assets/join.png" download="오르빗게이트-학생QR.png">QR코드 저장</a> <a class="button secondary" href="teacher.html">교사용 수업 슬라이드</a>`,
   );
   dlg.classList.add("projector");
 }
@@ -168,6 +169,7 @@ function missionStrip(active) {
     ["book", "판정 목록"],
     ["lab", "자동 방어실"],
     ["run", "급행 레일"],
+    ["ranger", "레인저 결과"],
   ]
     .map(([a, label]) =>
       btn(
@@ -180,59 +182,44 @@ function missionStrip(active) {
     .join("")}</div>`;
 }
 function start() {
-  if (!p || feedback) {
-    nextVisitor(false);
-  } else desk();
-  if (s.rows.length === 0)
-    modal(
-      `${chip("관제 로봇 피코의 첫 무전")}${title("학교행 셔틀이 도착했어요")}<p>${Orbit.missions[0].story}</p><div class="radioHint">“통행증의 날짜와 얼굴을 확인하고, 화물칸을 열어 봐. 네가 내린 판정이 내 첫 교과서야!”</div>${btn("close", "첫 방문객 만나기", "primary")}`,
-    );
+  let seen = false;
+  try {
+    seen = localStorage.getItem("orbit-briefed-v2") === "1";
+  } catch {}
+  if (!seen) {
+    if (!go("lesson")) return;
+    Lesson.open(app, false, enterPort);
+    return;
+  }
+  enterPort();
+}
+function enterPort() {
+  try {
+    localStorage.setItem("orbit-briefed-v2", "1");
+  } catch {}
+  if (!p || feedback) nextVisitor(false);
+  else desk();
 }
 function nextVisitor(fromButton = true) {
   if (fromButton && live && !live.done) return;
   p = Orbit.visitor(s.serial, s.salt);
+  revisit = false;
   opened = false;
   feedback = false;
-  revisit = false;
   tab = "passport";
   desk();
 }
-function docPanel() {
-  if (tab === "cargo")
-    return `<div class="cargoPanel"><div class="paperTitle"><span>화물 검사 트레이</span><b>02</b></div><h3>${p.name}의 화물칸</h3><div class="tray">${p.bag.map((id, i) => `<div><small>${i + 1}번 칸</small>${pic("item", id, Orbit.items[id])}</div>`).join("")}</div>${btn("hazard", "▤　위험 화물 도감", "catalog")}</div>`;
-  return `<div class="passport"><div class="paperTitle"><span>행성 간 통행증</span><b>✦</b></div><div class="identity"><div class="idPhoto">${face(p.photo)}</div><div><small>이름</small><strong>${p.name}</strong><small>탑승 항구</small><b>제7 우주항</b></div></div><div class="until"><small>사용할 수 있는 마지막 날</small><b>${date(p.until)}</b></div><div class="paperFoot"><i></i><span>ORBIT TRANSIT　✦　07</span></div></div>`;
+function faceMark(id, mark = 0) {
+  return `<div class="markedFace">${face(id)}${mark ? '<span aria-label="볼 무늬 ' + mark + '줄">' + "▰".repeat(mark) + "</span>" : ""}</div>`;
 }
-function reportLine() {
-  const ok = Orbit.allowed(p),
-    row = s.rows.find((x) => x.p.id === p.id);
-  return `<div class="verdict ${row?.pass === ok ? "good" : "oops"}" role="status"><b>${row?.pass === ok ? (s.combo >= 3 ? `${s.combo}연속 정확한 판정!` : "정확한 판정!") : "다시 볼 단서를 찾았어요"}</b><span>${Orbit.explain(p)}</span></div><div class="actions">${row && row.pass !== ok ? btn("repair", "판정 고치기", "secondary") : ""}${btn("next", "다음 방문객　→", "primary")}${s.rows.length >= 2 ? btn("lab", "AI 학습하기", "secondary") : ""}</div>`;
+function matchPanel(v) {
+  return `<div class="guideItems facePair"><figure>${faceMark(v.face, v.mark)}<figcaption>운전석에서 본 얼굴</figcaption></figure><figure>${faceMark(v.photo, v.photoMark)}<figcaption>통행증 사진</figcaption></figure></div>`;
 }
 function desk() {
   if (!go("desk")) return;
   if (!p) p = Orbit.visitor(s.serial, s.salt);
-  app.innerHTML = `<section class="console">${missionStrip("desk")}<div class="workbench"><div class="visual"><div class="sceneHUD"><span><i></i> 방문객 검사</span><b>오늘 ${date(p.today)}</b></div><div id="world" role="img" aria-label="실제 방문객 ${p.name}, 얼굴 ${p.face + 1}, ${Orbit.species[p.face % 4]}"></div><div class="sceneControls"><span>제7 탑승구</span><div>${btn("compare", "얼굴 대조", "compare")}${btn("left", "↶", "", 'aria-label="왼쪽에서 보기"')}${btn("right", "↷", "", 'aria-label="오른쪽에서 보기"')}</div></div><div class="speech"><span>${p.name}</span> “${p.line}”</div></div><div class="evidence"><div class="documentTabs">${btn("passport", "통행증", tab === "passport" ? "chosen" : "")}${btn("cargo", opened ? "화물칸 보기" : "▣　화물칸 열기", tab === "cargo" ? "chosen" : "")}</div><div id="doc">${docPanel()}</div></div></div><div class="decision" id="decision">${feedback ? reportLine() : decisionBar()}</div></section>`;
-  SpacePort.mount($("#world"), p, tab === "cargo");
-  if (feedback) SpacePort.leave(s.rows.find((x) => x.p.id === p.id)?.pass);
-}
-function decisionBar() {
-  return `<div class="prompt"><b>${opened ? "이 방문객의 판정은?" : "통행증과 짐을 확인하세요"}</b><small>${opened ? "오늘 날짜·사진·두 칸의 짐을 함께 살펴요." : "통행증을 살핀 뒤 오른쪽 화물칸을 여세요."}</small></div><div class="actions">${btn("hazard", "위험 화물 도감", "ghost")}${btn("hold", "Ⅱ　보류", "hold", opened ? "" : "disabled")}${btn("pass", "✓　통과", "pass", opened ? "" : "disabled")}</div>`;
-}
-function compareFaces() {
-  modal(
-    `${chip("통행증 대조")}${title("같은 방문객일까요?")}<div class="guideItems facePair"><figure>${face(p.face)}<figcaption>지금 내 앞의 얼굴</figcaption></figure><figure>${face(p.photo)}<figcaption>통행증에 있는 사진</figcaption></figure></div><p>두 얼굴의 생김새와 색을 비교해요.</p>${btn("close", "검사 계속하기", "primary")}`,
-  );
-}
-function changeDoc(which) {
-  tab = which;
-  if (which === "cargo") opened = true;
-  SpacePort.setOpen(which === "cargo");
-  $("#doc").innerHTML = docPanel();
-  document
-    .querySelectorAll(".documentTabs button")
-    .forEach((b) => b.classList.toggle("chosen", b.dataset.act === which));
-  if (opened) $("[data-act=cargo]").textContent = "화물칸 보기";
-  if (!feedback) $("#decision").innerHTML = decisionBar();
-  sound(390);
+  app.innerHTML = SpacePort.markup();
+  SpacePort.mount($("#world"), p);
 }
 function label(pass) {
   if (!opened || feedback || !p) return;
@@ -250,21 +237,6 @@ function label(pass) {
   s.score += ok ? 10 + Math.min(s.combo - 1, 5) * 2 : 1;
   save();
   sound(ok ? 680 : 280);
-  SpacePort.leave(pass);
-  $("#decision").innerHTML = reportLine();
-}
-function repair() {
-  const row = s.rows.find((x) => x.p.id === p.id);
-  if (row && row.pass !== Orbit.allowed(p)) {
-    row.pass = !row.pass;
-    s.rev++;
-    save();
-    $("#decision").innerHTML = reportLine().replace(
-      "정확한 판정!",
-      "판정을 고쳤어요",
-    );
-    toast("학습 목록에 수정한 판정을 저장했어요.");
-  }
 }
 function notebook(filter = bookTab) {
   if (!go("book")) return;
@@ -287,7 +259,7 @@ function record(id) {
   const r = s.rows.find((x) => x.p.id === id);
   if (!r) return;
   modal(
-    `${chip("학습 사례 다시 보기")}${title(r.p.name + "의 기록")}<div class="reviewFaces"><figure>${face(r.p.face)}<figcaption>실제 얼굴</figcaption></figure><figure>${face(r.p.photo)}<figcaption>통행증 사진</figcaption></figure>${r.p.bag.map((n, i) => `<figure>${pic("item", n, Orbit.items[n])}<figcaption>짐 ${i + 1}</figcaption></figure>`).join("")}</div><p>검사일 <b>${date(r.p.today)}</b><br>통행증 마지막 날 <b>${date(r.p.until)}</b></p><p>${Orbit.explain(r.p)}</p><p>내 판정　<b>${r.pass ? "통과" : "보류"}</b></p>${btn("flip", `${r.pass ? "보류" : "통과"} 목록으로 옮기기`, "secondary", `data-id="${id}"`)}`,
+    `${chip("학습 사례 다시 보기")}${title(r.p.name + "의 기록")}<div class="reviewFaces"><figure>${faceMark(r.p.face, r.p.mark)}<figcaption>실제 얼굴</figcaption></figure><figure>${faceMark(r.p.photo, r.p.photoMark)}<figcaption>통행증 사진</figcaption></figure>${r.p.bag.map((n, i) => `<figure>${pic("item", n, Orbit.items[n])}<figcaption>짐 ${i + 1}</figcaption></figure>`).join("")}</div><p>검사일 <b>${date(r.p.today)}</b><br>통행증 마지막 날 <b>${date(r.p.until)}</b></p><p>${Orbit.explain(r.p)}</p><p>내 판정　<b>${r.pass ? "통과" : "보류"}</b></p>${btn("flip", `${r.pass ? "보류" : "통과"} 목록으로 옮기기`, "secondary", `data-id="${id}"`)}`,
   );
 }
 
@@ -527,13 +499,13 @@ function choice(i, good) {
   }
   s.reflection = i;
   save();
-  dest.innerHTML = `<div class="note"><b>내 근무 기록</b><p>사례 ${s.rows.length}개 수집 → 모델 ${s.version}개 학습 → 게이트 동작 연결 → 수송대 ${s.round}회 출발</p>억울하게 멈춘 친구가 다시 확인을 요청할 수 있으면 좋겠지요. 내 모델도 새 사례로 다시 시험해 봐요.</div>${btn("home", "근무 마치고 돌아가기", "primary")}`;
+  dest.innerHTML = `<div class="note"><b>내 근무 기록</b><p>사례 ${s.rows.length}개 수집 → 모델 ${s.version}개 학습 → 게이트 동작 연결 → 수송대 ${s.round}회 출발</p>억울하게 멈춘 친구가 다시 확인을 요청할 수 있으면 좋겠지요. 내 모델도 새 사례로 다시 시험해 봐요.</div>${btn("ranger", "레인저 결과표 받기", "primary")}`;
   sound(820);
 }
 const actions = {
   home,
   start,
-  compare: compareFaces,
+
   help: guide,
   teacher,
   hazard,
@@ -553,14 +525,8 @@ const actions = {
     save();
     sound();
   },
-  left: () => SpacePort.turn(-0.28),
-  right: () => SpacePort.turn(0.28),
-  passport: () => changeDoc("passport"),
-  cargo: () => changeDoc("cargo"),
-  hold: () => label(false),
-  pass: () => label(true),
   next: nextVisitor,
-  repair,
+
   showPass: () => notebook(true),
   showHold: () => notebook(false),
   record: (b) => record(b.dataset.id),
@@ -606,6 +572,21 @@ document.addEventListener("change", (e) => {
     lab();
   }
 });
+Object.assign(actions, {
+  fieldUse: () => SpacePort.use(),
+  fieldOut: () => SpacePort.out(),
+  fieldJump: () => SpacePort.jump(),
+  askOut: () => SpacePort.passengerOut(),
+  accept: () => SpacePort.panelChoice(true),
+  decline: () => SpacePort.panelChoice(false),
+  restoreShift: () => SpacePort.restart(),
+  upgrade: (b) => SpacePort.purchase(Number(b.dataset.i)),
+  ranger: () => rangerReport(),
+});
+dlg.addEventListener("close", () => {
+  if (!dlg.open) SpacePort.finishRead();
+});
 soundLabel();
 home();
 if (location.hash === "#teacher") teacher();
+else if (location.hash === "#enter") enterPort();

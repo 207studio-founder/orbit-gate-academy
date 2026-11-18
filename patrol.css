@@ -1,0 +1,578 @@
+header nav .teachNav {
+  color: #e9eff4;
+  text-decoration: none;
+  font-weight: 750;
+  font-size: 13px;
+}
+.fieldShell,
+.lessonSlide {
+  width: min(1510px, calc(100% - 36px));
+  margin: auto;
+}
+.fieldHead,
+.fieldFoot,
+.lessonBar,
+.lessonNav,
+.rankBand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+}
+.fieldHead {
+  padding: 0 3px 9px;
+}
+.fieldHead strong,
+.fieldHead small,
+.taskBox b,
+.taskBox small,
+.rankBand small,
+.rankBand b {
+  display: block;
+}
+.fieldHead strong {
+  font: 400 25px var(--display);
+  letter-spacing: -0.03em;
+}
+.fieldHead small,
+.taskBox small {
+  font-size: 11px;
+  color: #bdcdce;
+  font-weight: 750;
+}
+.fieldHead button,
+.fieldFoot button,
+.teachNav {
+  padding: 5px 9px;
+}
+.fieldHead button {
+  border: 1px solid #46556a;
+  border-radius: 5px;
+  font-size: 13px;
+  margin-left: 5px;
+}
+.portWorld#world {
+  height: clamp(350px, calc(100dvh - 200px), 780px);
+  min-height: 0;
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  border-radius: 13px;
+  border: 1px solid #52657b;
+  background: #a899ad url("assets/sky.webp") 50% 15%/100% 100%;
+  touch-action: none;
+  cursor: default;
+}
+.portWorld canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  outline: none;
+}
+.loadingPort {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: #1b3046;
+  color: #ffe09a;
+}
+.taskBox,
+.moneyHUD,
+.fieldRadio,
+.waypoint,
+.fieldActions,
+.stick {
+  z-index: 2;
+  position: absolute;
+}
+.taskBox,
+.moneyHUD b,
+.fieldRadio,
+.waypoint,
+.fieldActions button {
+  background: #14243de6;
+  border: 1px solid #71808a88;
+  color: #f6ecd8;
+  border-radius: 8px;
+}
+.taskBox {
+  top: 13px;
+  left: 14px;
+  padding: 8px 13px;
+  border-left: 4px solid var(--gold);
+}
+.taskBox b {
+  font-size: 17px;
+}
+.moneyHUD {
+  right: 13px;
+  top: 13px;
+  display: flex;
+  gap: 5px;
+}
+.moneyHUD b {
+  padding: 5px 11px;
+  font-size: 15px;
+}
+.moneyHUD .fieldLife {
+  color: #ffa48d;
+  letter-spacing: 2px;
+}
+.moneyHUD .fieldBank {
+  color: var(--gold);
+}
+.waypoint {
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  font-size: 12px;
+  font-weight: 850;
+  border-color: #f5cf6c;
+  color: #ffe7a2;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.fieldRadio {
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-color: #dcac70;
+  padding: 7px 14px;
+  width: max-content;
+  max-width: 85%;
+  text-align: center;
+  font-size: 14px;
+}
+.fieldActions {
+  right: 13px;
+  bottom: 13px;
+  display: flex;
+  gap: 6px;
+  align-items: end;
+}
+.fieldActions button {
+  padding: 9px 14px;
+  font-size: 14px;
+}
+.fieldActions .interact {
+  background: #ffcf71;
+  color: #263244;
+  min-width: 120px;
+}
+.fieldActions .interact:disabled {
+  background: #273951;
+  color: #f1f1e1;
+  opacity: 0.85;
+}
+.stick {
+  left: 16px;
+  bottom: 14px;
+  width: 78px;
+  height: 78px;
+  border: 2px solid #e1edf194;
+  border-radius: 50%;
+  background: #182d4b44;
+  touch-action: none;
+  display: grid;
+  place-items: center;
+}
+.stickDot {
+  display: block;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  background: #e0f3f4b5;
+  box-shadow: 0 2px 3px #15203577;
+  pointer-events: none;
+}
+.fieldFoot {
+  flex-wrap: wrap;
+  padding: 8px 3px;
+  color: #b7c9d5;
+  font-size: 12px;
+}
+.fieldFoot kbd {
+  color: #e3ecef;
+}
+.fieldFoot button {
+  padding: 3px 8px;
+  color: var(--gold);
+}
+[hidden] {
+  display: none !important;
+}
+.markedFace {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+.markedFace span {
+  position: absolute;
+  top: 64%;
+  left: 20%;
+  font-size: 12px;
+  color: #6b3d61;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+.tinyItem {
+  height: 40px;
+  width: 40px;
+  vertical-align: middle;
+  object-fit: contain;
+}
+.storeList {
+  display: grid;
+  gap: 6px;
+  margin: 15px 0;
+}
+.storeList > div {
+  display: flex;
+  gap: 7px;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #465875;
+  padding: 8px 11px;
+  border-radius: 6px;
+}
+.storeList small {
+  display: block;
+  font-size: 12px;
+  color: #cad6df;
+}
+.storeList b small {
+  display: inline;
+  color: #ffd37b;
+}
+.storeList button {
+  font-size: 13px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  min-height: 34px;
+}
+.memberCard,
+.rankBand {
+  background: linear-gradient(125deg, #395263, #28675f);
+  border: 1px solid #88b9a9;
+  color: #fff1d4;
+  padding: 18px;
+  border-radius: 8px;
+}
+.memberCard b {
+  font-size: 22px;
+}
+.rankBand {
+  justify-content: start;
+}
+.rankBand > span {
+  font-size: 38px;
+  color: #ffd477;
+}
+.rankBand b {
+  font-size: 23px;
+}
+.reportLabel {
+  display: block;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.reportLabel input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid #71819b;
+  border-radius: 5px;
+  color: white;
+  background: #142238;
+  font: inherit;
+}
+.smallNote {
+  font-size: 12px;
+}
+.lessonSlide {
+  max-width: 1280px;
+  background: #1a2b42;
+  border: 1px solid #41516a;
+  border-radius: 15px;
+  overflow: hidden;
+}
+.lessonBar,
+.lessonNav {
+  padding: 15px 3.4%;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+.lessonBar {
+  border-bottom: 1px solid #485b6d;
+  color: #e0d6b2;
+}
+.lessonCenter {
+  display: grid;
+  grid-template-columns: 1.06fr 1fr;
+  align-items: stretch;
+  min-height: clamp(300px, 54dvh, 560px);
+}
+.lessonWords {
+  align-self: center;
+  padding: 6% 7%;
+}
+.lessonWords > small {
+  color: #ffce72;
+  font-weight: 800;
+  font-size: 16px;
+}
+.lessonWords h1 {
+  font-family: var(--display);
+  font-size: clamp(35px, 4.5vw, 67px);
+  line-height: 1.13;
+  margin: 14px 0 16px;
+  color: #fff0d1;
+}
+.lessonWords p {
+  font-size: clamp(17px, 1.56vw, 25px);
+  color: #e4eced;
+}
+.lessonArt {
+  display: grid;
+  align-content: center;
+  position: relative;
+  background: linear-gradient(155deg, #33435d, #56637b);
+  padding: 7%;
+  justify-items: center;
+}
+.lessonHeroArt {
+  position: absolute;
+  inset: 0;
+  background: url("assets/port.webp") 70% 50% / cover;
+}
+.lessonCards {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.lessonCards figure {
+  flex: 1;
+  text-align: center;
+  background: #eadfc3;
+  color: #263349;
+  border-radius: 8px;
+  padding: 10px 4px;
+  font-weight: 850;
+}
+.lessonCards img {
+  width: 100%;
+  height: clamp(75px, 14vw, 195px);
+  object-fit: contain;
+}
+.lessonArt > small {
+  margin-top: 10px;
+  color: #fff;
+}
+.flowTokens,
+.compareRoutes,
+.lessonKeys {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  justify-items: center;
+  width: 100%;
+}
+.flowTokens span,
+.flowTokens b,
+.compareRoutes div,
+.lessonKeys kbd {
+  background: #20374b;
+  border: 1px solid #91a89e;
+  padding: 10px 14px;
+  border-radius: 7px;
+  color: #eaf5e8;
+  font-weight: 750;
+}
+.flowTokens i {
+  color: #ffd06c;
+}
+.flowTokens b,
+.compareRoutes b {
+  color: #ffdb8d;
+}
+.lessonKeys > div {
+  display: flex;
+  gap: 6px;
+}
+.lessonKeys kbd {
+  min-width: 44px;
+  font-size: 21px;
+}
+.lessonQR img {
+  width: min(100%, 340px);
+  max-height: 42vh;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.lessonNav {
+  border-top: 1px solid #43566a;
+}
+.dots {
+  display: flex;
+  gap: 4px;
+}
+.dots button {
+  padding: 5px;
+  width: 12px;
+  height: 12px;
+  background: #627389;
+  border-radius: 50%;
+}
+.dots .on {
+  background: var(--gold);
+}
+body[data-teacher] #slides {
+  padding-top: min(6vh, 50px);
+}
+@media (pointer: fine) {
+  .fieldActions .touchJump,
+  .stick {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .fieldShell,
+  .lessonSlide {
+    width: calc(100% - 14px);
+  }
+  .fieldHead strong {
+    font-size: 19px;
+  }
+  .fieldHead button {
+    font-size: 11px;
+    padding: 4px;
+  }
+  .fieldHead {
+    gap: 3px;
+  }
+  .portWorld#world {
+    height: clamp(350px, calc(100dvh - 170px), 740px);
+  }
+  .taskBox {
+    left: 6px;
+    top: 6px;
+    max-width: 68%;
+    padding: 5px 8px;
+  }
+  .taskBox b {
+    font-size: 13px;
+  }
+  .moneyHUD {
+    right: 5px;
+    top: 6px;
+    flex-direction: column;
+  }
+  .moneyHUD b {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+  .fieldFoot {
+    font-size: 10px;
+  }
+  .fieldActions {
+    right: 6px;
+    bottom: 9px;
+  }
+  .fieldActions button {
+    font-size: 12px;
+    padding: 7px;
+  }
+  .stick {
+    width: 64px;
+    height: 64px;
+    left: 8px;
+  }
+  .lessonCenter {
+    grid-template-columns: 1fr;
+  }
+  .lessonWords {
+    padding: 18px;
+  }
+  .lessonArt {
+    min-height: 160px;
+    padding: 13px;
+  }
+  .lessonArt img {
+    max-height: 155px;
+  }
+  .lessonCenter .lessonWords h1 {
+    font-size: 34px;
+  }
+  .lessonWords p {
+    font-size: 16px;
+  }
+  .lessonNav {
+    padding: 10px;
+  }
+  .dots {
+    gap: 2px;
+  }
+  .dots button {
+    width: 8px;
+    height: 8px;
+    padding: 3px;
+  }
+  .lessonBar {
+    padding: 10px;
+    font-size: 11px;
+  }
+  .lessonQR img {
+    width: 150px;
+  }
+  .lessonCards {
+    max-width: 360px;
+  }
+  .flowTokens {
+    gap: 3px;
+  }
+  .flowTokens span,
+  .flowTokens b {
+    padding: 4px 9px;
+  }
+  .fieldRadio {
+    font-size: 12px;
+    top: 60px;
+  }
+  .fieldHead small {
+    font-size: 9px;
+  }
+  .teachNav {
+    font-size: 11px !important;
+    padding: 3px;
+  }
+  .lessonNav button {
+    font-size: 13px;
+  }
+}
+
+.mapPin {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  z-index: 1;
+  padding: 2px 6px;
+  font-weight: 750;
+  font-size: 10px;
+  border: 1px solid #e6e3c699;
+  border-radius: 4px;
+  background: #1d3545c9;
+  color: #f1eed6;
+}
+.mapPin.stopPin {
+  color: #ffd2b3;
+  border-color: #ffb599;
+  font-size: 12px;
+}
+.fieldShell kbd {
+  font-family: ui-monospace, monospace;
+}

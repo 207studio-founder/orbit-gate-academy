@@ -105,18 +105,32 @@ const Orbit = (() => {
       line: cue[pick(cue.length)],
     };
   }
+  function markings(p, level, seed) {
+    if (level < 4) return p;
+    const wasDifferent = p.face !== p.photo;
+    const mark = 1 + ((seed >>> 0) % 3);
+    p.mark = p.photoMark = mark;
+    if (wasDifferent && level >= 8) {
+      p.photo = p.face;
+      p.photoMark = 1 + (mark % 3);
+    } else if (wasDifferent) {
+      p.photo = (p.face + 4) % 12;
+    }
+    return p;
+  }
   function dateFor(k) {
     return iso(Date.UTC(2186, 3, 24) + day * (k % 360));
   }
   const lessonTypes = [0, 1, 5, 2, 3, 0, 4, 5, 1, 0, 2, 3, 4, 6, 5, 0];
   function visitor(serial, salt) {
     const r = rng(salt + serial * 3571);
-    return caseOf(
+    const p = caseOf(
       (salt + serial * 9277) >>> 0,
       "T" + serial,
       serial < lessonTypes.length ? lessonTypes[serial] : Math.floor(r() * 7),
       dateFor(Math.floor(serial / 3)),
     );
+    return markings(p, serial, serial * 37 + salt);
   }
   function wave(round, stage, salt) {
     const m = missions[stage],
@@ -129,7 +143,7 @@ const Orbit = (() => {
       const j = Math.floor(r() * (i + 1));
       [types[i], types[j]] = [types[j], types[i]];
     }
-    return types.map((type, i) =>
+    const batch = types.map((type, i) =>
       caseOf(
         Math.floor(r() * 4294967295),
         "W" + round + "-" + i,
@@ -137,11 +151,12 @@ const Orbit = (() => {
         dateFor(round * 3 + 7),
       ),
     );
+    return batch.map((p, i) => markings(p, stage * 5, round * 13 + i));
   }
   function evidence(p) {
     return [
       +(p.until < p.today),
-      +(p.face !== p.photo),
+      +(p.face !== p.photo || (p.mark || 0) !== (p.photoMark || 0)),
       +p.bag.includes(4),
       +p.bag.includes(5),
     ];
