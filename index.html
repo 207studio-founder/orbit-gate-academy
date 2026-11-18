@@ -8,19 +8,27 @@
     <style>
       html, body { margin: 0; height: 100%; background: #14162e; overflow: hidden; }
       body { font: 600 15px/1.5 "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif; color: #f4f6ff; user-select: none; }
-      #c { display: block; image-rendering: pixelated; touch-action: none; outline: none; }
+      #c { display: block; image-rendering: pixelated; touch-action: none; outline: none; cursor: crosshair; }
       .box { position: fixed; background: #1b1f3bee; border: 3px solid #7df9ff; box-shadow: 4px 4px 0 #0008; padding: 8px 12px; }
       #hud { left: 12px; top: 12px; }
       #help { left: 12px; bottom: 12px; font-size: 13px; border-color: #5b6399; color: #c9d2ff; }
       #prompt { left: 50%; bottom: 70px; transform: translateX(-50%); font-size: 18px; border-color: #ffc93c; }
       #panel { left: 50%; top: 50%; transform: translate(-50%, -50%); min-width: 380px; max-width: 560px; font-size: 16px; }
       #panel h2 { margin: 0 0 6px; font-size: 20px; color: #ffc93c; }
+      #panel.doc { max-width: 780px; max-height: 88vh; overflow: auto; font-size: 14px; }
+      #panel.doc p { margin: 5px 0; } #panel.doc .btns { margin: 6px 0; gap: 6px; } #panel.doc button { padding: 3px 9px; }
+      #panel.side { left: 14px; top: 64px; transform: none; max-width: 380px; }
+      table { border-collapse: collapse; margin: 6px 0; font-size: 13px; } td { border: 2px solid #3a4170; padding: 2px 7px; }
+      tr:first-child td { color: #7df9ff; }
       #panel .faces { display: flex; gap: 18px; margin: 8px 0; text-align: center; font-size: 13px; }
       #panel canvas { width: 144px; height: 144px; image-rendering: pixelated; border: 3px solid #f4f6ff; display: block; }
       #panel .keys { margin-top: 8px; color: #7df9ff; font-size: 14px; }
       #panel ul { margin: 4px 0; padding-left: 20px; }
       #toast { left: 50%; top: 60px; transform: translateX(-50%); font-size: 18px; text-align: center; }
       #toast.ok { border-color: #5fe08a; } #toast.bad { border-color: #ff4d5e; }
+      #event { left: 50%; top: 150px; transform: translateX(-50%); font-size: 17px; text-align: center; }
+      #event.ok { border-color: #5fe08a; } #event.bad { border-color: #ff4d5e; } #event.warn { border-color: #ffc93c; }
+      .bribe { color: #ffb3c7; margin: 6px 0; }
       #bench { right: 12px; top: 12px; font: 12px/1.4 ui-monospace, monospace; white-space: pre; border-color: #5b6399; }
       button { font: inherit; color: #1b1f3b; background: #ffe27a; border: 3px solid #1b1f3b; box-shadow: 3px 3px 0 #0008; padding: 5px 12px; cursor: pointer; }
       button.on { background: #5fe08a; } button:disabled { background: #8a90b0; cursor: default; }
@@ -31,11 +39,18 @@
       #qr img { width: min(56vh, 460px); image-rendering: pixelated; background: #fff; padding: 14px; display: block; margin: 8px auto; }
       #qr h1 { margin: 0; color: #ffc93c; } #qrurl { font-size: 22px; color: #7df9ff; margin: 6px 0 12px; }
       #start { inset: 0; display: flex; align-items: center; justify-content: center; background: #14162ecc; border: 0; box-shadow: none; }
-      #start > div { background: #1b1f3b; border: 4px solid #7df9ff; box-shadow: 6px 6px 0 #0008; padding: 16px 24px; max-width: 760px; }
+      #start > div { background: #1b1f3b; border: 4px solid #7df9ff; box-shadow: 6px 6px 0 #0008; padding: 16px 24px; max-width: 940px; }
       #start h1 { margin: 0 0 4px; font-size: 30px; color: #ffc93c; }
       #start ol { margin: 6px 0; padding-left: 22px; }
-      #guide { display: flex; gap: 18px; margin: 8px 0; } #guide figure { margin: 0; text-align: center; font-size: 13px; }
-      #guide canvas { width: 144px; height: 144px; image-rendering: pixelated; border: 3px solid #f4f6ff; display: block; }
+      #guide { display: flex; gap: 8px; margin: 8px 0; } #guide figure { margin: 0; text-align: center; font-size: 12px; }
+      #guide canvas { width: 84px; height: 84px; image-rendering: pixelated; border: 3px solid #f4f6ff; display: block; }
+      #guide .haz canvas { border-color: #ff4d5e; } #guide .haz figcaption { color: #ff9e9e; }
+      #lookbox { right: 12px; top: 60px; }
+      #start .cols { display: flex; gap: 22px; }
+      #look { display: flex; gap: 10px; margin: 8px 0; }
+      #lookpic { width: 144px; height: 144px; image-rendering: pixelated; border: 3px solid #f4f6ff; display: block; }
+      #lookopts { font-size: 13px; } #lookopts div { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; white-space: nowrap; }
+      #lookopts span { width: 58px; } #lookopts b { width: 66px; text-align: center; } #lookopts button { padding: 0 7px; font-size: 12px; box-shadow: 2px 2px 0 #0008; }
       #notyet { font-size: 12px; color: #a9b0d6; margin-top: 8px; }
       #hud button { margin-left: 10px; padding: 1px 8px; font-size: 13px; }
       #sheet { display: none; }
@@ -48,10 +63,11 @@
     <canvas id="c" tabindex="0"></canvas>
     <div id="hud" class="box"></div>
     <img id="sheet" alt="결과표" />
-    <div id="help" class="box">WASD 이동 · Shift 달리기 · Space 점프 · 드래그 또는 Z/C 시점 · 휠 확대 · E 하기 · H 규칙</div>
+    <div id="help" class="box">WASD 이동 · Shift 달리기 · Space 점프 · 드래그 또는 Z/C 시점 · 휠 확대 · E 하기 · 클릭 또는 F 그물 · H 규칙 <button data-do="mute" style="padding:0 6px;font-size:12px;margin-left:6px">소리 끄기</button></div>
     <div id="prompt" class="box" hidden></div>
     <div id="panel" class="box" hidden></div>
     <div id="toast" class="box" hidden></div>
+    <div id="event" class="box" hidden></div>
     <div id="bench" class="box" hidden></div>
     <div id="start" class="box">
       <div>
@@ -62,14 +78,30 @@
           <li><b>운전석</b>에 다가가 <b>E</b>: 통행증의 날짜와 사진을 실제 얼굴과 비교. 얼굴이 다르면 <b>R</b>로 진료 기록.</li>
           <li><b>화물칸</b>에서 <b>E</b>: 열고, 덮개를 걷고, 화물을 돌려 보며 무엇인지 스스로 판단.</li>
           <li>위험 화물이면 운전석에서 <b>Q</b>로 내리게 하고, 운전기사에게 <b>E</b>로 몸수색해 허가증 찾기.</li>
+          <li>화물칸에서 <b>살아 있는 괴물</b>이 나오면 자동 보류. 닮은 얼굴은 <b>눈 모양과 점</b>까지 비교.</li>
+          <li><b>우주항 사무소</b>에서 크레딧으로 차선·AI 감시탑·필터·장비를 사고, <b>관제탑</b>에서 다음 여행자 무리를 보고 필터를 고르세요. <b>5주기</b>를 마치면 정식 허가증!</li>
+          <li>달아나는 운전기사나 튀어나온 괴물은 <b>마우스로 겨누고 클릭</b>해 그물로 포획. 보호막은 근무마다 3개.</li>
           <li><b>판정 레버</b>에서 <b>E</b> 다음 <b>1 통과 / 2 보류</b>. 규칙은 언제든 <b>H</b>.</li>
-          <li>판정을 2건 한 뒤 <b>AI 감식대</b>에서 단서를 골라 AI를 가르치고 시험해 보세요.</li>
+          <li><b>표본 관찰대</b>에서 표본을 통과/보류 목록에 넣고, <b>AI 감식대</b>에서 단서를 골라 모델을 학습시키고, <b>비교 시험대</b>에서 모델 4개까지 같은 수송대로 견주어 보세요.</li>
         </ol>
-        위험 화물 도감 (현장에서는 사진이 나오지 않아요. 모양을 기억하세요.)
-        <div id="guide"></div>
+        <div class="cols">
+          <div>
+            화물 도감 (현장에서는 사진이 나오지 않아요. 모양을 기억하세요. 색은 여러 가지예요.)
+            <div id="guide"></div>
+          </div>
+          <div>
+            내 레인저 꾸미기 (근무 중에도 이 모습 그대로 나와요.)
+            <div id="lookslot"><div id="look"><canvas id="lookpic" width="96" height="96"></canvas><div id="lookopts"></div></div></div>
+          </div>
+        </div>
         <button data-do="start">E 또는 Enter: 근무 시작</button> <a href="teacher.html" style="color:#7df9ff;font-size:13px;margin-left:12px">교사용 수업 슬라이드</a>
         <div id="notyet"></div>
       </div>
+    </div>
+    <div id="lookbox" class="box" hidden>
+      내 레인저 꾸미기
+      <div id="lookslot2"></div>
+      <button data-do="lookclose">닫기</button>
     </div>
     <div id="qr" class="box" hidden>
       <div>

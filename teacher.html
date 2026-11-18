@@ -23,7 +23,8 @@
   </head>
   <body>
     <main><section id="slide"></section></main>
-    <nav><button id="prev">← 이전</button><span id="count"></span><button id="next">다음 →</button></nav>
+    <nav><button id="prev">← 이전</button><span id="count"></span><button id="next">다음 →</button>
+      <span style="margin-left:28px;font-size:15px">허가증 접수: 번호 <input id="pno" inputmode="numeric" maxlength="6" placeholder="6자리" style="width:84px;font:inherit;padding:2px 6px" /> → 접수 코드 <b id="pcode" style="font-size:22px;letter-spacing:3px">----</b></span></nav>
     <script>
       const student = new URL("./", location.href).href;
       const slides = [
@@ -34,8 +35,8 @@
         `<h1>예측과 행동: AI의 말이 문을 움직여요</h1><ul><li>배운 AI는 새 트럭을 보고 <b>통과 / 보류</b>를 예측합니다.</li><li>게임에서는 판정 레버 옆에 AI 스캐너의 예측이 나옵니다.</li><li>AI의 예측을 그대로 믿어도 될까요? 누가 마지막으로 확인해야 할까요?</li></ul>`,
         `<h1>④ ⑤ 평가: 처음 보는 수송대로 시험해요</h1><ul><li>연습 때 본 적 없는 <b>새 트럭 12대</b>로 시험합니다. 처음 보는 색의 화물도 섞여 있습니다.</li><li><b>잘못 통과</b>(막아야 할 것을 보냄)와 <b>잘못 보류</b>(보내야 할 것을 막음)를 따로 셉니다.</li><li>단서를 바꾸거나 사례를 더 모아 다시 가르치고 비교합니다.</li></ul>`,
         `<h1>우리 생활이라면?</h1><ul><li>내 급식 도시락이 위험물로 <b>잘못 분류</b>되면, 누구의 점심이 늦어질까요?</li><li>AI가 친구의 통행증을 <b>잘못 읽으면</b>, 누가 다시 확인해야 할까요?</li><li>잘못 통과와 잘못 보류 중 어느 쪽이 더 곤란할까요? 상황마다 같을까요?</li></ul>`,
-        `<h1>게임 방법</h1><ol><li><b>WASD</b> 걷기 · <b>Shift</b> 달리기 · <b>Space</b> 점프 · 마우스 <b>드래그</b>로 둘러보기</li><li><b>운전석</b>에서 <b>E</b>: 통행증 날짜, 사진과 실제 얼굴 비교 (<b>R</b> 진료 기록)</li><li><b>화물칸</b>에서 <b>E</b>: 열기 → 덮개 걷기 → 화물 돌려 보기</li><li>위험 화물이면 <b>Q</b>로 하차 요청, 운전기사에게 <b>E</b>로 몸수색</li><li><b>판정 레버</b>에서 <b>1 통과 / 2 보류</b> · 규칙은 <b>H</b></li><li><b>AI 감식대</b>에서 단서 고르고 학습 · 시험</li></ol><small>한글 입력 상태여도 그대로 됩니다.</small>`,
-        `<h1>결과 내는 방법</h1><ul><li>트럭 7대를 판정하면 근무가 끝나고 <b>우주 레인저 등급</b> 결과표가 나옵니다.</li><li><b>PNG 저장</b> 또는 <b>PDF로 저장(인쇄)</b>을 눌러 파일로 만든 뒤, 선생님이 정한 곳에 냅니다.</li><li>이름(별명)은 학생 기기 안에서만 쓰입니다. 계정도, 서버로 가는 기록도 없습니다.</li></ul>`,
+        `<h1>게임 방법</h1><ol><li><b>WASD</b> 걷기 · <b>Shift</b> 달리기 · <b>Space</b> 점프 · 마우스 <b>드래그</b>로 둘러보기</li><li><b>운전석</b>에서 <b>E</b>: 통행증 날짜, 사진과 실제 얼굴 비교 (<b>R</b> 진료 기록)</li><li><b>화물칸</b>에서 <b>E</b>: 열기 → 덮개 걷기 → 화물 돌려 보기</li><li>위험 화물이면 <b>Q</b>로 하차 요청, 운전기사에게 <b>E</b>로 몸수색</li><li><b>판정 레버</b>에서 <b>1 통과 / 2 보류</b> · 규칙은 <b>H</b></li><li>달아나는 운전기사·튀어나온 괴물은 마우스로 겨누고 <b>클릭</b>해 그물 포획</li><li><b>표본 관찰대 → AI 감식대 → 비교 시험대</b>: 라벨 붙이기, 학습, 모델 4개까지 견주기</li><li><b>우주항 사무소</b>(차선·감시탑·장비)와 <b>관제탑</b>(다음 여행자 무리, 필터)</li></ol><small>한글 입력 상태여도 그대로 됩니다.</small>`,
+        `<h1>결과 내는 방법</h1><ul><li>트럭 7대를 판정하면 근무(1주기)가 끝나고 <b>우주 레인저 등급</b> 표가 나옵니다. <b>5주기</b>를 마치면 번호가 찍힌 <b>정식 허가증</b>이 나옵니다.</li><li>학생이 낸 허가증의 <b>번호 6자리</b>를 이 화면 아래 칸에 넣으면 <b>접수 코드 4자리</b>가 나옵니다. 학생이 그 코드를 넣으면 무한 모드가 열립니다.</li><li><b>PNG 저장</b> 또는 <b>PDF로 저장(인쇄)</b>을 눌러 파일로 만든 뒤, 선생님이 정한 곳에 냅니다.</li><li>이름(별명)은 학생 기기 안에서만 쓰입니다. 계정도, 서버로 가는 기록도 없습니다.</li></ul>`,
         `<h1>제7 우주항으로 출발!</h1><div class="join"><img id="qr" src="join.png" alt="학생 입장 QR" onerror="this.remove()"><div>크롬북으로 QR을 찍거나 주소를 입력하세요.<div class="url">${student}</div><small>이 버전에 없는 것: 그물총과 도주·괴물 사건, 경제와 감시탑, 5주기 허가증과 무한 모드, 캐릭터 꾸미기, 소리, 화물 3종.</small></div></div>`,
       ];
       let i = Math.min(slides.length - 1, Math.max(0, Number(location.hash.slice(1)) - 1 || 0));
@@ -47,7 +48,15 @@
       const go = (d) => { i = Math.min(slides.length - 1, Math.max(0, i + d)); show(); };
       document.getElementById("prev").onclick = () => go(-1);
       document.getElementById("next").onclick = () => go(1);
-      addEventListener("keydown", (e) => { if (["ArrowRight", "Space", "PageDown", "Enter"].includes(e.code)) go(1); if (["ArrowLeft", "PageUp"].includes(e.code)) go(-1); });
+      // Permit receipt: the same function the game runs (it lives in the game core), computed here with nothing sent anywhere.
+      WebAssembly.instantiateStreaming(fetch("orbit_gate.wasm"), {}).then(({ instance }) => {
+        window.receipt = (n) => instance.exports.og_receipt(n);
+        document.getElementById("pno").oninput = (e) => {
+          const n = Number(e.target.value);
+          document.getElementById("pcode").textContent = /^\d{6}$/.test(e.target.value) ? String(window.receipt(n)) : "----";
+        };
+      });
+      addEventListener("keydown", (e) => { if (e.target instanceof HTMLInputElement) return; if (["ArrowRight", "Space", "PageDown", "Enter"].includes(e.code)) go(1); if (["ArrowLeft", "PageUp"].includes(e.code)) go(-1); });
       show();
     </script>
   </body>
